@@ -1,13 +1,10 @@
 from sqlalchemy.orm import Session
 
-from app.constants import AuditEventType, CaseStatus
+from app.constants import ApiMessage, AuditEventType, CaseStatus
 from app.models import Case, OutcomeAuditEntry
 from app.repositories import add_audit_entry, get_case_by_id
 from app.schemas import OutcomeSubmission
-
-
-class CaseNotFoundError(LookupError):
-    """Raised for a missing surrogate case identifier."""
+from app.services.errors import CaseNotFoundError
 
 
 def record_outcome(
@@ -16,7 +13,7 @@ def record_outcome(
     """Capture an open case or correct a resolved case in one transaction."""
     case = get_case_by_id(session, case_id)
     if case is None:
-        raise CaseNotFoundError(f"No case found with id {case_id}")
+        raise CaseNotFoundError(ApiMessage.CASE_NOT_FOUND.format(case_id=case_id))
 
     if case.status == CaseStatus.RESOLVED:
         if (

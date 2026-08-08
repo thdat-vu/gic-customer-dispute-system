@@ -22,6 +22,21 @@ This preserves the documented validation boundary and lets the milestone meet it
 Definition of Done without opportunistically implementing the API layer. It also makes the
 milestone split and my intervention concrete rather than claiming AI only generated boilerplate.
 
+## Candidate 04 — Milestone 3 OpenAPI contract verification
+
+### AI-assisted finding
+
+The first API implementation returned the required shared error envelope at runtime, but OpenAPI
+still advertised FastAPI's default `HTTPValidationError` for 422 responses. Codex found this by
+reading the generated local `/openapi.json` during the milestone verification.
+
+### Result retained for review
+
+The implementation now declares `ErrorResponse` on documented 404/422 responses and has an
+integration test asserting that Swagger references that schema. Runtime responses and the
+machine-readable contract therefore agree. I should keep this only if I can explain the tradeoff
+in the final submission: custom exception handlers alone do not update OpenAPI documentation.
+
 ## Candidate 02 — Documentation consistency review
 
 ### AI-assisted finding

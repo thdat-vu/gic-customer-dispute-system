@@ -9,15 +9,15 @@ scope.
 
 ## Current position
 
-**Milestone 2 is complete.** The next approved implementation work is **Milestone 3 — Backend
-API layer**.
+**Milestone 3 is complete.** The next approved implementation work is **Milestone 4 — Frontend
+list/search + case detail**.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
 | 0 — Repo scaffold | Complete | `0b74daf feat: init base project`; `backend/` FastAPI scaffold and `frontend/` Next.js App Router scaffold | Backend and frontend development servers were verified during setup. |
 | 1 — Backend data layer | Complete | `e0fb8f3 feat: add backend data layer`; `backend/app/models/`, `backend/app/seed.py`, `backend/tests/test_seed.py` | Seed command created 220 SQLite records; query confirmed 220 total, two `CASE-00213` rows, and one NULL `user_id`; pytest passed 2/2. |
-| 2 — Backend core business logic | Complete | Current working-tree evidence: `backend/app/services/`, `backend/app/repositories/`, `backend/app/schemas/outcome.py`, and focused P0 tests | Capture/correct/no-op, validation-boundary, seed, CSV parsing, and monthly resolved-trend P0 tests pass (7/7). Commit pending. |
-| 3 — Backend API layer | Not started | No API routers, schemas, error envelope, CORS, or integration tests yet | Pending all five documented endpoints and P1 API tests. |
+| 2 — Backend core business logic | Complete | `62adc70 feat: add outcome business logic` | Capture/correct/no-op, validation-boundary, seed, CSV parsing, and monthly resolved-trend P0 tests passed (7/7). |
+| 3 — Backend API layer | Complete | Current working-tree evidence: `backend/app/api/`, API schemas, routes, handlers, and `backend/tests/test_api.py` | Five documented routes appear in OpenAPI; shared errors/CORS work; P1 integration tests pass. Commit pending. |
 | 4 — Frontend list/search + case detail | Not started | No product UI implementation yet | Pending FR-1/FR-2/FR-3/FR-8 end-to-end against the backend. |
 | 5 — Frontend outcome + history | Not started | No outcome form or history UI yet | Pending capture/correct and Manager-only history flow. |
 | 6 — Frontend trend view | Not started | No trend UI or aggregation display yet | Pending monthly trend view and empty state. |
@@ -66,6 +66,25 @@ API layer**.
   git diff --check                                                                       # passed
   ```
 
+### Milestone 3 — Backend API layer
+
+- All five `/api` endpoints are mounted as thin handlers over services/repositories: list/search,
+  detail, capture/correct, history, and month/region trends.
+- Every implemented 4xx/5xx handler returns the documented `{ error: { code, message, fields } }`
+  shape. `fields` is always present; validation errors contain field entries and non-validation
+  errors return `null`.
+- CORS permits only the documented local frontend origin, `http://localhost:3000`.
+- OpenAPI response schemas explicitly document the shared error envelope rather than FastAPI's
+  raw `HTTPValidationError` format.
+- Validation recorded at implementation time:
+
+  ```text
+  cd backend && uv run pytest tests/test_api.py  # 9 passed
+  cd backend && uv run pytest                    # 16 passed
+  git diff --check                               # passed
+  uv run fastapi dev main.py --host 127.0.0.1 --port 8001  # OpenAPI inspected; server stopped
+  ```
+
 ## Supporting preparation (not an implementation milestone)
 
 - Specification and architecture documents were added in `204c7ef docs: add documents [DatVT]`.
@@ -77,8 +96,9 @@ API layer**.
 
 ## Next work boundary
 
-Start only Milestone 3. Add thin FastAPI routes, the documented shared error envelope, CORS, and
-P1 integration tests over the completed services. Do not start frontend work yet.
+Start only Milestone 4. Implement the approved frontend list/search, case detail, and local role
+switcher against the real API. Read `DESIGN.md` and `design-reference/` first; do not add outcome
+editing, history, or trends UI yet.
 
 ## Update rules
 

@@ -38,9 +38,9 @@ Key assumptions and decisions:
   roles are a UI-only simulation.
 - Show outcome counts by month, with a clear empty state when no resolved cases exist.
 
-Current implementation evidence: the data layer and backend capture/correct service rules are
-implemented and covered by focused P0 tests. HTTP endpoints and frontend screens remain pending,
-so this draft does not yet claim the end-to-end workflow is complete.
+Current implementation evidence: the data layer, backend capture/correct service rules, and all
+five documented HTTP endpoints are implemented and covered by focused P0/P1 tests. Frontend
+screens remain pending, so this draft does not yet claim the end-to-end workflow is complete.
 
 ### 2.2 Non-functional requirements considered
 
@@ -83,6 +83,12 @@ entry with prior/new values; an identical submission adds no audit entry.
 Every 4xx/5xx response uses `{ "error": { "code", "message", "fields" } }`. The `fields`
 key is always present: `null` for non-validation errors and an array for validation errors.
 
+The API is mounted under `/api` and exposes list/search, detail, outcome capture/correction,
+history, and month/region trend endpoints. CORS permits the local Next.js origin only. The
+runtime error handlers and OpenAPI response schemas both use the same error envelope, avoiding a
+common drift where FastAPI's raw validation schema appears in Swagger while runtime sends a
+custom response.
+
 ### 3.3 Architecture notes
 
 The repository is a small monorepo: a Python/FastAPI service backed by SQLite and a Next.js
@@ -94,8 +100,8 @@ HTTP plumbing.
 At the current milestone, repositories, outcome services, a minimal Pydantic
 `OutcomeSubmission` validator, and monthly aggregation are implemented. The validation model is
 deliberately present before the HTTP routes solely to prove invalid outcome values are rejected
-before reaching the service; the actual FastAPI routes and error-envelope handling are deferred
-to Milestone 3.
+before reaching the service. Milestone 3 adds the thin FastAPI routes, shared exception handlers,
+CORS middleware, and contract-aligned OpenAPI response schemas.
 
 ## 4. Concerns, Tradeoffs, and What I'd Do With More Time
 

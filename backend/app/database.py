@@ -1,8 +1,9 @@
+from collections.abc import Generator
 from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
 BACKEND_DIRECTORY = Path(__file__).resolve().parent.parent
@@ -32,3 +33,11 @@ def create_database_schema(target_engine: Engine = engine) -> None:
     from app import models  # noqa: F401
 
     Base.metadata.create_all(bind=target_engine)
+
+
+def get_session() -> Generator[Session, None, None]:
+    database_session = SessionLocal()
+    try:
+        yield database_session
+    finally:
+        database_session.close()
