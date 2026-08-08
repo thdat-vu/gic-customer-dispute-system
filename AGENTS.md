@@ -28,6 +28,7 @@ This is a time-boxed GCI dispute-outcome technical assessment. Read this file an
 | Backend install/sync | `cd backend && uv sync` |
 | Backend development | `cd backend && uv run fastapi dev main.py` |
 | Backend tests | `cd backend && uv run pytest` (once tests exist) |
+| Database setup | `cd backend && uv run python -m app.seed` (run once) |
 | Frontend install | `cd frontend && npm ci` |
 | Frontend development | `cd frontend && npm run dev` |
 | Frontend lint | `cd frontend && npm run lint` |

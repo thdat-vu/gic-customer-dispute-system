@@ -14,11 +14,15 @@ Start the backend in one terminal:
 ```bash
 cd backend
 uv sync
+uv run python -m app.seed
 uv run fastapi dev main.py
 ```
 
 The backend is available at `http://localhost:8000`; Swagger UI is at
 `http://localhost:8000/docs`.
+
+`uv run python -m app.seed` is an explicit one-time setup step. It creates the local
+SQLite database at `backend/data/app.db` and imports the 220-row assessment dataset.
 
 Start the frontend in a second terminal:
 
@@ -37,4 +41,4 @@ cd frontend && npm run lint
 cd backend && uv run pytest
 ```
 
-Backend tests and application features are added in later implementation milestones.
+The backend seed tests require no external services and use a temporary SQLite database.
