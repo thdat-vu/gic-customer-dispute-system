@@ -81,6 +81,26 @@ capture/correction flag or enforce authorization that the assignment explicitly 
 Before final submission, I should verify that this entry accurately reflects my own review of
 the generated implementation rather than presenting it as a human-authored change.
 
+## Candidate 07 — Milestone 6 trend presentation
+
+### AI-generated options
+
+Codex identified that FR-7 and the milestone definition allow either a simple table or chart.
+The visual reference includes a line chart and table, while the behavioral specification only
+requires counts by month and/or region plus an empty state.
+
+### Direction retained for review
+
+I retained a compact outcome-breakdown table and added the API's existing Month/Region grouping
+control. I did not add a chart library, date-range controls, or any new aggregation endpoint.
+
+### Reason for change
+
+The table exposes all required counts accurately in the smallest implementation and avoids
+turning a one-hour milestone into chart-library setup. I spot-checked the frontend's expected
+monthly API values against the seeded SQLite query before marking the milestone complete. Before
+final submission, I should verify this describes my own review and decision accurately.
+
 ## Candidate 02 — Documentation consistency review
 
 ### AI-assisted finding

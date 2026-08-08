@@ -40,8 +40,9 @@ Key assumptions and decisions:
 
 Current implementation evidence: the data layer, backend capture/correct service rules, and all
 five documented HTTP endpoints are implemented and covered by focused P0/P1 tests. The Cases
-list/search, detail, Analyst capture/correction, and Manager-only audit-history UI call the real
-API. Trend UI remains pending, so this draft does not yet claim the full workflow is complete.
+list/search, detail, Analyst capture/correction, Manager-only audit-history UI, and read-only
+trend table call the real API. The trend view supports the documented month and region groupings
+and explicitly handles the zero-resolved-case state.
 
 ### 2.2 Non-functional requirements considered
 
@@ -110,7 +111,10 @@ switcher. It uses the case surrogate ID for detail lookup and deliberately shows
 PII in the detail sheet. The shared Analyst outcome editor performs client-side required-outcome
 validation and sends both captures and corrections to the same API endpoint. When the role is
 Manager, that editor is replaced by a history view sourced from the API; no server-side
-authorization is implied. Trends remain deferred to their dedicated milestone.
+authorization is implied. The read-only Trends workspace is available to both roles, calls the
+existing aggregation endpoint, and renders loading, API-error, zero-data, and outcome-breakdown
+states. It uses a compact table rather than a chart to keep the take-home implementation small
+while showing the complete required counts.
 
 ## 4. Concerns, Tradeoffs, and What I'd Do With More Time
 

@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { CaseDetailSheet } from "@/components/case-detail-sheet"
+import { TrendView } from "@/components/trend-view"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -30,7 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getCases, type CaseDetail, type CaseListItem } from "@/lib/api"
-import { CaseStatus, OutcomeValue, Role, SearchField, UiText } from "@/lib/constants"
+import { AppView, CaseStatus, OutcomeValue, Role, SearchField, UiText } from "@/lib/constants"
 
 function formatAmount(amount: number, currency: string): string {
   return new Intl.NumberFormat(undefined, {
@@ -123,6 +124,7 @@ export default function Home() {
     term: "",
   })
   const [role, setRole] = useState(Role.ANALYST)
+  const [activeView, setActiveView] = useState(AppView.CASES)
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -173,13 +175,27 @@ export default function Home() {
         <div className="flex min-w-56 items-center gap-7">
           <span className="text-lg font-semibold tracking-tight">{UiText.PRODUCT_NAME}</span>
           <nav aria-label="Primary navigation" className="flex h-14 items-center gap-5 text-sm font-medium">
-            <span className="flex h-14 items-center border-b-2 border-[#004ac6] text-[#004ac6]">
+            <button
+              className={`flex h-14 items-center border-b-2 ${activeView === AppView.CASES ? "border-[#004ac6] text-[#004ac6]" : "border-transparent text-slate-500"}`}
+              onClick={() => setActiveView(AppView.CASES)}
+              type="button"
+            >
               {UiText.CASES}
-            </span>
-            <span className="text-slate-500">{UiText.TRENDS}</span>
+            </button>
+            <button
+              className={`flex h-14 items-center border-b-2 ${activeView === AppView.TRENDS ? "border-[#004ac6] text-[#004ac6]" : "border-transparent text-slate-500"}`}
+              onClick={() => {
+                setActiveView(AppView.TRENDS)
+                setSelectedCaseId(null)
+              }}
+              type="button"
+            >
+              {UiText.TRENDS}
+            </button>
           </nav>
         </div>
-        <form className="mx-auto hidden w-full max-w-xl lg:block" onSubmit={submitSearch}>
+        {activeView === AppView.CASES && (
+          <form className="mx-auto hidden w-full max-w-xl lg:block" onSubmit={submitSearch}>
           <label className="sr-only" htmlFor="header-search">{searchPlaceholder}</label>
           <div className="relative">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />
@@ -191,7 +207,8 @@ export default function Home() {
               value={searchTerm}
             />
           </div>
-        </form>
+          </form>
+        )}
         <div className="ml-auto flex items-center gap-2 text-sm">
           <span className="hidden text-slate-500 xl:inline">Acting as</span>
           <Select onValueChange={(value) => value && setRole(value)} value={role}>
@@ -230,6 +247,7 @@ export default function Home() {
           </div>
         </aside>
 
+        {activeView === AppView.CASES ? (
         <section className="min-w-0 flex-1 p-5 md:p-6">
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -332,6 +350,9 @@ export default function Home() {
             )}
           </div>
         </section>
+        ) : (
+          <TrendView />
+        )}
       </div>
 
       {selectedCaseId !== null && (

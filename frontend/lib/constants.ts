@@ -7,6 +7,12 @@ export class ApiPath {
   static readonly CASE_DETAIL = "/cases/{caseId}"
   static readonly CASE_OUTCOME = "/cases/{caseId}/outcome"
   static readonly CASE_HISTORY = "/cases/{caseId}/history"
+  static readonly TRENDS = "/trends"
+}
+
+export class AppView {
+  static readonly CASES = "cases"
+  static readonly TRENDS = "trends"
 }
 
 export class Role {
@@ -29,6 +35,11 @@ export class OutcomeValue {
   static readonly WON = "won"
   static readonly LOST = "lost"
   static readonly FRAUD_CONFIRMED = "fraud_confirmed"
+}
+
+export class TrendGroup {
+  static readonly MONTH = "month"
+  static readonly REGION = "region"
 }
 
 export class ValidationLimit {

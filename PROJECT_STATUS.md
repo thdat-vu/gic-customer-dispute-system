@@ -9,8 +9,8 @@ scope.
 
 ## Current position
 
-**Milestone 5 is complete.** The next approved implementation work is **Milestone 6 — Frontend
-trend view**.
+**Milestone 6 is complete.** The next approved implementation work is **Milestone 7 — README +
+polish**.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
@@ -19,8 +19,8 @@ trend view**.
 | 2 — Backend core business logic | Complete | `62adc70 feat: add outcome business logic` | Capture/correct/no-op, validation-boundary, seed, CSV parsing, and monthly resolved-trend P0 tests passed (7/7). |
 | 3 — Backend API layer | Complete | `83c8551 feat: add dispute API endpoints` | Five documented routes appear in OpenAPI; shared errors/CORS work; P1 integration tests pass. |
 | 4 — Frontend list/search + case detail | Complete | `c69b49d feat: add case management interface` | Browse/search, read-only detail, loading/empty/error states, and UI-only role switcher run against the real API; lint/build passed. |
-| 5 — Frontend outcome + history | Complete | Current working-tree evidence: `frontend/components/case-detail-sheet.tsx`, `frontend/lib/api.ts`, `frontend/lib/constants.ts`, `frontend/components/ui/textarea.tsx` | Analyst capture/correction calls the real API with client validation; Manager-only history is fetched/rendered and role switch changes the affordance without reload. Commit pending. |
-| 6 — Frontend trend view | Not started | No trend UI or aggregation display yet | Pending monthly trend view and empty state. |
+| 5 — Frontend outcome + history | Complete | `fbefce6 feat: add outcome management interface` | Analyst capture/correction calls the real API with client validation; Manager-only history is fetched/rendered and role switch changes the affordance without reload. |
+| 6 — Frontend trend view | Complete | Current working-tree evidence: `frontend/components/trend-view.tsx`, `frontend/app/page.tsx`, `frontend/lib/api.ts`, `frontend/lib/constants.ts` | Both roles can open Month/Region grouping, see outcome counts or explicit loading/error/empty states; local SQLite/API spot-check matches the visible monthly values. Commit pending. |
 | 7 — README + polish | Not started | README has current local run, seed, and test instructions, but the final handoff audit has not occurred | Pending complete implemented/skipped scope, architecture explanation, and clean-checkout verification. |
 
 ## Completed implementation evidence
@@ -127,6 +127,31 @@ trend view**.
   git diff --check                            # passed
   ```
 
+### Milestone 6 — Frontend trend view
+
+- The existing in-app Cases/Trends navigation now opens a read-only trend workspace without
+  changing the UI-only acting role; both Analyst and Manager may view it.
+- `TrendView` calls the existing `GET /api/trends` contract and renders the three documented
+  outcome counts in a compact table. The grouping control exposes the already-supported `month`
+  and `region` options; it does not add screenshot-only date ranges or filters.
+- Loading, API error with retry, and the explicit zero-resolved-cases empty state are rendered.
+  A table was chosen instead of a chart to keep the bounded assessment UI dependency-free while
+  still providing the complete required outcome breakdown.
+- Definition-of-Done spot check: with the immutable seed loaded locally, both SQLite and the
+  actual FastAPI response returned `2026-01 = won 4 / lost 4 / fraud_confirmed 2`, through
+  `2026-07 = won 4 / lost 0 / fraud_confirmed 2`.
+- Validation recorded at implementation time:
+
+  ```text
+  cd frontend && npm run lint                 # passed
+  cd frontend && npm run build                # passed
+  cd backend && uv run python -m app.seed     # seeded 220 local records
+  sqlite3 data/app.db <resolved-case trend query>  # matched monthly buckets
+  cd backend && uv run python -c '<FastAPI TestClient trends request>'  # matched SQL values
+  cd backend && uv run pytest                 # 16 passed (one upstream deprecation warning)
+  git diff --check                            # passed
+  ```
+
 ## Supporting preparation (not an implementation milestone)
 
 - Specification and architecture documents were added in `204c7ef docs: add documents [DatVT]`.
@@ -138,8 +163,8 @@ trend view**.
 
 ## Next work boundary
 
-Start only Milestone 6. Add the documented read-only trend view using the existing API; preserve
-the existing local role state and do not start README/polish or stretch work yet.
+Start only Milestone 7. Audit and complete the top-level README against the implemented scope,
+then verify the documented run/test instructions. Do not start stretch work yet.
 
 ## Update rules
 

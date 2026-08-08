@@ -29,6 +29,18 @@ export type OutcomeHistoryEntry = {
   changed_at: string
 }
 
+export type TrendBucket = {
+  key: string
+  won: number
+  lost: number
+  fraud_confirmed: number
+}
+
+export type TrendsResponse = {
+  group_by: string
+  buckets: TrendBucket[]
+}
+
 type CaseListResponse = {
   items: CaseListItem[]
   total: number
@@ -100,4 +112,9 @@ export function saveOutcome(
 export async function getCaseHistory(caseId: number): Promise<OutcomeHistoryEntry[]> {
   const response = await request<CaseHistoryResponse>(casePath(ApiPath.CASE_HISTORY, caseId))
   return response.entries
+}
+
+export function getTrends(groupBy: string): Promise<TrendsResponse> {
+  const parameters = new URLSearchParams({ group_by: groupBy })
+  return request<TrendsResponse>(`${ApiPath.TRENDS}?${parameters.toString()}`)
 }
