@@ -125,6 +125,12 @@ The color palette is dominated by a neutral scale to maintain a calm, focused en
   diagnostic only and must not replace the blue/green workflow status badge.
 - **Data-quality filtering:** place an “All data / Data issues only” selector beside the other
   list filters. It refines list results only; it must not be represented as a workflow status.
+- **Search control placement:** on desktop, place the selected-field control immediately to the
+  left of the header search input. Do not repeat it in the page-level filter row. On compact
+  layouts, keep the same selector and input together above the filters.
+- **Month range control:** render Start month and End month as compact Popover + Calendar
+  pickers with month/year navigation, rather than browser-native month inputs. Selecting any day
+  represents that full `YYYY-MM` month; the API does not receive day-level range values.
 
 ## Typography
 
@@ -191,9 +197,10 @@ visual treatment only. When they differ, the behavioral documents win.
 - Render an “Acting as” dropdown for Analyst and Manager as local UI state. It changes visible
   affordances only; the backend performs no authentication or authorization and accepts write
   requests regardless of the supplied role.
-- Treat “New Manual Case”, export, high-priority/flagged/archive navigation, date-range filters,
-  and notification/settings controls in the screenshots as visual-reference material, not v1
-  features. Do not implement them unless a behavioral requirement is added.
+- Treat “New Manual Case”, export, high-priority/flagged/archive navigation, and
+  notification/settings controls in the screenshots as visual-reference material, not v1
+  features. Do not implement them unless a behavioral requirement is added. The approved month
+  range, status, region, and data-quality controls are exceptions documented in the SRS.
 - Use the screenshots’ right detail drawer for the documented case-detail view, but defer its
   outcome editor to Milestone 5 and audit history to the Manager-only Milestone 5 work.
 - Defer the chart and trend controls to Milestone 6. The required trend grouping is month and/or

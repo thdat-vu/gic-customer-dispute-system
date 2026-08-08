@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { CaseDetailSheet } from "@/components/case-detail-sheet"
+import { MonthPicker } from "@/components/month-picker"
 import { TrendView } from "@/components/trend-view"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -287,18 +288,28 @@ export default function Home() {
           </nav>
         </div>
         {activeView === AppView.CASES && (
-          <form className="mx-auto hidden w-full max-w-xl lg:block" onSubmit={submitSearch}>
-          <label className="sr-only" htmlFor="header-search">{searchPlaceholder}</label>
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />
-            <Input
-              className="h-9 border-slate-300 bg-[#eff4ff] pl-9"
-              id="header-search"
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder={searchPlaceholder}
-              value={searchTerm}
-            />
-          </div>
+          <form className="mx-auto hidden w-full max-w-xl items-center gap-2 lg:flex" onSubmit={submitSearch}>
+            <Select onValueChange={(value) => value && setSearchField(value)} value={searchField}>
+              <SelectTrigger aria-label="Search field" className="h-9 w-32 shrink-0 border-slate-300 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SearchField.USER_ID}>User ID</SelectItem>
+                <SelectItem value={SearchField.DEVICE_ID}>Device ID</SelectItem>
+                <SelectItem value={SearchField.EMAIL}>Email</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="relative min-w-0 flex-1">
+              <label className="sr-only" htmlFor="header-search">{searchPlaceholder}</label>
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />
+              <Input
+                className="h-9 border-slate-300 bg-[#eff4ff] pl-9"
+                id="header-search"
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+              />
+            </div>
           </form>
         )}
         <div className="ml-auto flex items-center gap-2 text-sm">
@@ -349,17 +360,8 @@ export default function Home() {
               </p>
             </div>
             <form className="flex w-full max-w-lg gap-2 lg:hidden" onSubmit={submitSearch}>
-              <label className="sr-only" htmlFor="mobile-search">{searchPlaceholder}</label>
-              <Input
-                id="mobile-search"
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder={searchPlaceholder}
-                value={searchTerm}
-              />
-            </form>
-            <form className="flex flex-wrap items-center gap-2" onSubmit={submitSearch}>
               <Select onValueChange={(value) => value && setSearchField(value)} value={searchField}>
-                <SelectTrigger aria-label="Search field" className="h-9 min-w-32 border-slate-300 bg-white">
+                <SelectTrigger aria-label="Search field" className="h-9 w-32 shrink-0 border-slate-300 bg-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -368,26 +370,18 @@ export default function Home() {
                   <SelectItem value={SearchField.EMAIL}>Email</SelectItem>
                 </SelectContent>
               </Select>
-              <div>
-                <label className="sr-only" htmlFor="start-month">Start month</label>
-                <Input
-                  className="h-9 w-36 border-slate-300 bg-white"
-                  id="start-month"
-                  onChange={(event) => setStartMonth(event.target.value)}
-                  type="month"
-                  value={startMonth}
-                />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="end-month">End month</label>
-                <Input
-                  className="h-9 w-36 border-slate-300 bg-white"
-                  id="end-month"
-                  onChange={(event) => setEndMonth(event.target.value)}
-                  type="month"
-                  value={endMonth}
-                />
-              </div>
+              <label className="sr-only" htmlFor="mobile-search">{searchPlaceholder}</label>
+              <Input
+                className="min-w-0 flex-1"
+                id="mobile-search"
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+              />
+            </form>
+            <form className="flex flex-wrap items-center gap-2" onSubmit={submitSearch}>
+              <MonthPicker id="start-month" label="Start month" onChange={setStartMonth} value={startMonth} />
+              <MonthPicker id="end-month" label="End month" onChange={setEndMonth} value={endMonth} />
               <Select onValueChange={(value) => value && setStatusFilter(value)} value={statusFilter}>
                 <SelectTrigger aria-label="Status filter" className="h-9 min-w-30 border-slate-300 bg-white">
                   <SelectValue />

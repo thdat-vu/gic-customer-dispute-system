@@ -32,6 +32,9 @@ export class Pagination {
 }
 
 export class DateFormat {
+  static readonly MONTH_DISPLAY_FORMAT = "MMMM yyyy"
+  static readonly MONTH_PAD_CHARACTER = "0"
+  static readonly MONTH_PAD_LENGTH = 2
   static readonly MONTH_PREFIX_LENGTH = 7
   static readonly YEAR_START_MONTH = "01"
 }
