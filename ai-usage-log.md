@@ -37,6 +37,26 @@ integration test asserting that Swagger references that schema. Runtime response
 machine-readable contract therefore agree. I should keep this only if I can explain the tradeoff
 in the final submission: custom exception handlers alone do not update OpenAPI documentation.
 
+## Candidate 05 — Milestone 4 shadcn scope decision
+
+### AI-assisted option
+
+Codex reviewed the shadcn installation guidance and identified two available approaches: use the
+CLI to copy the small set of component sources needed by this Next.js app, or configure an MCP
+server for registry discovery and generation.
+
+### Human decision and result
+
+I chose the CLI-only path to keep the assessment setup small. It initialized shadcn in the
+existing Next.js/Tailwind project and added only Button, Input, Select, Sheet, Table, Badge,
+Skeleton, and Separator. No shadcn MCP server or extra design tooling was added.
+
+### Reason for change
+
+The visual source of truth was already `DESIGN.md` plus the three reference images; an MCP server
+would not unlock required product behavior for this milestone. Using copied local components kept
+the UI implementation inspectable and avoided another moving part during the time-boxed task.
+
 ## Candidate 02 — Documentation consistency review
 
 ### AI-assisted finding

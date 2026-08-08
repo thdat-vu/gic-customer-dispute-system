@@ -9,16 +9,16 @@ scope.
 
 ## Current position
 
-**Milestone 3 is complete.** The next approved implementation work is **Milestone 4 — Frontend
-list/search + case detail**.
+**Milestone 4 is complete.** The next approved implementation work is **Milestone 5 — Frontend
+capture/correct outcome + history**.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
 | 0 — Repo scaffold | Complete | `0b74daf feat: init base project`; `backend/` FastAPI scaffold and `frontend/` Next.js App Router scaffold | Backend and frontend development servers were verified during setup. |
 | 1 — Backend data layer | Complete | `e0fb8f3 feat: add backend data layer`; `backend/app/models/`, `backend/app/seed.py`, `backend/tests/test_seed.py` | Seed command created 220 SQLite records; query confirmed 220 total, two `CASE-00213` rows, and one NULL `user_id`; pytest passed 2/2. |
 | 2 — Backend core business logic | Complete | `62adc70 feat: add outcome business logic` | Capture/correct/no-op, validation-boundary, seed, CSV parsing, and monthly resolved-trend P0 tests passed (7/7). |
-| 3 — Backend API layer | Complete | Current working-tree evidence: `backend/app/api/`, API schemas, routes, handlers, and `backend/tests/test_api.py` | Five documented routes appear in OpenAPI; shared errors/CORS work; P1 integration tests pass. Commit pending. |
-| 4 — Frontend list/search + case detail | Not started | No product UI implementation yet | Pending FR-1/FR-2/FR-3/FR-8 end-to-end against the backend. |
+| 3 — Backend API layer | Complete | `83c8551 feat: add dispute API endpoints` | Five documented routes appear in OpenAPI; shared errors/CORS work; P1 integration tests pass. |
+| 4 — Frontend list/search + case detail | Complete | Current working-tree evidence: `frontend/app/page.tsx`, `frontend/components/case-detail-sheet.tsx`, `frontend/lib/api.ts`, and shadcn components | Browse/search, read-only detail, loading/empty/error states, and UI-only role switcher run against the real API; lint/build pass. Commit pending. |
 | 5 — Frontend outcome + history | Not started | No outcome form or history UI yet | Pending capture/correct and Manager-only history flow. |
 | 6 — Frontend trend view | Not started | No trend UI or aggregation display yet | Pending monthly trend view and empty state. |
 | 7 — README + polish | Not started | README has current local run, seed, and test instructions, but the final handoff audit has not occurred | Pending complete implemented/skipped scope, architecture explanation, and clean-checkout verification. |
@@ -85,6 +85,26 @@ list/search + case detail**.
   uv run fastapi dev main.py --host 127.0.0.1 --port 8001  # OpenAPI inspected; server stopped
   ```
 
+### Milestone 4 — Frontend list/search + case detail
+
+- The desktop-first Cases workspace uses the approved application shell, dense table, and
+  right-side 480px detail sheet from `DESIGN.md`.
+- The table fetches all cases from the real API, preserves newest-first server order, and submits
+  a selected-field (`user_id`, `device_id`, or `email`) search to the same endpoint.
+- Case navigation uses the surrogate integer `id`; the detail sheet shows the documented full PII
+  and reference fields. It intentionally contains no editor or history section yet.
+- Loading skeleton, no-cases, no-search-results, API-error, and detail-loading/detail-error
+  states are rendered. The Acting as Select is local state and resets on page reload.
+- shadcn CLI added only Button, Input, Select, Sheet, Table, Badge, Skeleton, and Separator;
+  no shadcn MCP server was configured.
+- Validation recorded at implementation time:
+
+  ```text
+  cd frontend && npm run lint   # passed
+  cd frontend && npm run build  # passed
+  git diff --check              # passed
+  ```
+
 ## Supporting preparation (not an implementation milestone)
 
 - Specification and architecture documents were added in `204c7ef docs: add documents [DatVT]`.
@@ -96,9 +116,9 @@ list/search + case detail**.
 
 ## Next work boundary
 
-Start only Milestone 4. Implement the approved frontend list/search, case detail, and local role
-switcher against the real API. Read `DESIGN.md` and `design-reference/` first; do not add outcome
-editing, history, or trends UI yet.
+Start only Milestone 5. Add the shared outcome form and client validation for Analyst view, then
+render Manager-only history from the real API. Preserve the existing local role state and do not
+start trend UI yet.
 
 ## Update rules
 

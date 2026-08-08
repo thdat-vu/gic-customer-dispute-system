@@ -39,8 +39,10 @@ Key assumptions and decisions:
 - Show outcome counts by month, with a clear empty state when no resolved cases exist.
 
 Current implementation evidence: the data layer, backend capture/correct service rules, and all
-five documented HTTP endpoints are implemented and covered by focused P0/P1 tests. Frontend
-screens remain pending, so this draft does not yet claim the end-to-end workflow is complete.
+five documented HTTP endpoints are implemented and covered by focused P0/P1 tests. The Cases
+list/search and read-only detail flow now call the real API; outcome editing, audit-history UI,
+and trends UI remain pending, so this draft does not yet claim the end-to-end workflow is
+complete.
 
 ### 2.2 Non-functional requirements considered
 
@@ -102,6 +104,12 @@ At the current milestone, repositories, outcome services, a minimal Pydantic
 deliberately present before the HTTP routes solely to prove invalid outcome values are rejected
 before reaching the service. Milestone 3 adds the thin FastAPI routes, shared exception handlers,
 CORS middleware, and contract-aligned OpenAPI response schemas.
+
+The frontend currently implements a desktop-first Cases workspace: a dense list, selected-field
+search, loading/empty/error states, a right-side read-only detail sheet, and a local
+Analyst/Manager role switcher. It uses the case surrogate ID for detail lookup and deliberately
+shows full supplied PII in the detail sheet. Outcome editor, history, and trends are deferred to
+their dedicated milestones.
 
 ## 4. Concerns, Tradeoffs, and What I'd Do With More Time
 
