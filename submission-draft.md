@@ -47,8 +47,9 @@ and explicitly handles the zero-resolved-case state.
 ### 2.2 Non-functional requirements considered
 
 - **Performance:** the bounded 220-row dataset does not justify caching, queues, or scaling work.
-- **Data sensitivity:** email and device ID are visible in full in v1; this is an explicit
-  time-boxed tradeoff, not a production privacy design.
+- **Data sensitivity:** list email is masked while user ID/device ID remain visible for analyst
+  scanning; full supplied values remain searchable and visible in case detail. This is a limited
+  UI mitigation, not a production authorization model.
 - **Error handling:** every API error uses one envelope. Validation errors include structured
   field details; unexpected errors remain generic and non-leaky.
 - **Maintainability:** business rules live in a service layer and are covered first by focused
@@ -106,9 +107,12 @@ before reaching the service. Milestone 3 adds the thin FastAPI routes, shared ex
 CORS middleware, and contract-aligned OpenAPI response schemas.
 
 The frontend currently implements a desktop-first Cases workspace: a dense list, selected-field
-search, loading/empty/error states, a right-side detail sheet, and a local Analyst/Manager role
-switcher. It uses the case surrogate ID for detail lookup and deliberately shows full supplied
-PII in the detail sheet. The shared Analyst outcome editor performs client-side required-outcome
+search, inclusive month-range filtering (January of current year through current month by
+default), exact status/region filtering, one-based 20-row pagination with direct page controls,
+loading/empty/error
+states, a right-side detail sheet, and a local Analyst/Manager role switcher. It uses the case
+surrogate ID for detail lookup, masks email only in the list, and shows full supplied PII in the
+detail sheet. The shared Analyst outcome editor performs client-side required-outcome
 validation and sends both captures and corrections to the same API endpoint. When the role is
 Manager, that editor is replaced by a history view sourced from the API; no server-side
 authorization is implied. The read-only Trends workspace is available to both roles, calls the
@@ -124,10 +128,12 @@ while showing the complete required counts.
   assessment scope.
 - `created_at` trends can differ from outcome-recording time. I would add `resolved_at` and offer
   it as an alternative trend axis.
-- I would add pagination, PII masking, stronger frontend tests, and end-to-end tests only after
-  the core workflow is complete and validated.
+- I would add stronger frontend tests, end-to-end tests, and a `resolved_at` trend axis after the
+  core workflow is complete and validated.
 - The source data contains deliberate anomalies. Retaining them demonstrates tolerant historical
   ingestion, but a production system would require a defined remediation process.
+- The trend display is a table rather than a chart. This is sufficient for the required counts;
+  I would add a chart only if it improved an identified analyst workflow after the core review.
 
 ## 5. AI Usage Disclosure
 

@@ -12,6 +12,7 @@ import {
 import { CaseDetailSheet } from "@/components/case-detail-sheet"
 import { TrendView } from "@/components/trend-view"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -31,7 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getCases, type CaseDetail, type CaseListItem } from "@/lib/api"
-import { AppView, CaseStatus, OutcomeValue, Role, SearchField, UiText } from "@/lib/constants"
+import { AppView, CaseFilter, CaseStatus, DateFormat, OutcomeValue, Pagination, Role, SearchField, UiText } from "@/lib/constants"
 
 function formatAmount(amount: number, currency: string): string {
   return new Intl.NumberFormat(undefined, {
@@ -54,6 +55,19 @@ function outcomeLabel(outcome: string | null): string {
     return UiText.UNRECORDED_OUTCOME
   }
   return outcome.replaceAll("_", " ")
+}
+
+function maskEmail(email: string): string {
+  const [localPart, domain] = email.split("@")
+  return `${localPart.charAt(0)}*****@${domain}`
+}
+
+function currentMonth(): string {
+  return new Date().toISOString().slice(0, DateFormat.MONTH_PREFIX_LENGTH)
+}
+
+function currentYearStart(): string {
+  return `${new Date().getUTCFullYear()}-${DateFormat.YEAR_START_MONTH}`
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -101,7 +115,7 @@ function LoadingRows() {
     <TableBody>
       {Array.from({ length: 6 }).map((_, index) => (
         <TableRow key={index}>
-          {Array.from({ length: 6 }).map((__, columnIndex) => (
+          {Array.from({ length: 9 }).map((__, columnIndex) => (
             <TableCell key={columnIndex}>
               <Skeleton className="h-4 w-full" />
             </TableCell>
@@ -113,14 +127,25 @@ function LoadingRows() {
 }
 
 export default function Home() {
+  const initialEndMonth = currentMonth()
+  const initialStartMonth = currentYearStart()
   const [cases, setCases] = useState<CaseListItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchField, setSearchField] = useState(SearchField.USER_ID)
   const [searchTerm, setSearchTerm] = useState("")
-  const [submittedSearch, setSubmittedSearch] = useState({
+  const [startMonth, setStartMonth] = useState(initialStartMonth)
+  const [endMonth, setEndMonth] = useState(initialEndMonth)
+  const [region, setRegion] = useState("")
+  const [statusFilter, setStatusFilter] = useState(CaseFilter.ALL)
+  const [submittedQuery, setSubmittedQuery] = useState({
+    endMonth: initialEndMonth,
     field: SearchField.USER_ID,
+    page: Pagination.DEFAULT_PAGE,
+    region: "",
+    startMonth: initialStartMonth,
+    status: CaseFilter.ALL,
     term: "",
   })
   const [role, setRole] = useState(Role.ANALYST)
@@ -129,7 +154,15 @@ export default function Home() {
 
   useEffect(() => {
     let active = true
-    getCases(submittedSearch.field, submittedSearch.term)
+    getCases({
+      endMonth: submittedQuery.endMonth,
+      page: submittedQuery.page,
+      region: submittedQuery.region,
+      searchField: submittedQuery.field,
+      searchTerm: submittedQuery.term,
+      startMonth: submittedQuery.startMonth,
+      status: submittedQuery.status === CaseFilter.ALL ? undefined : submittedQuery.status,
+    })
       .then((response) => {
         if (!active) return
         setCases(response.items)
@@ -141,13 +174,51 @@ export default function Home() {
     return () => {
       active = false
     }
-  }, [submittedSearch])
+  }, [submittedQuery])
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (startMonth && endMonth && startMonth > endMonth) {
+      setError(UiText.MONTH_RANGE_INVALID)
+      return
+    }
     setLoading(true)
     setError(null)
-    setSubmittedSearch({ field: searchField, term: searchTerm.trim() })
+    setSubmittedQuery({
+      endMonth,
+      field: searchField,
+      page: Pagination.DEFAULT_PAGE,
+      region: region.trim(),
+      startMonth,
+      status: statusFilter,
+      term: searchTerm.trim(),
+    })
+  }
+
+  function resetFilters() {
+    setEndMonth(initialEndMonth)
+    setError(null)
+    setLoading(true)
+    setRegion("")
+    setSearchField(SearchField.USER_ID)
+    setSearchTerm("")
+    setStartMonth(initialStartMonth)
+    setStatusFilter(CaseFilter.ALL)
+    setSubmittedQuery({
+      endMonth: initialEndMonth,
+      field: SearchField.USER_ID,
+      page: Pagination.DEFAULT_PAGE,
+      region: "",
+      startMonth: initialStartMonth,
+      status: CaseFilter.ALL,
+      term: "",
+    })
+  }
+
+  function changePage(page: number) {
+    setLoading(true)
+    setError(null)
+    setSubmittedQuery((currentQuery) => ({ ...currentQuery, page }))
   }
 
   function handleCaseUpdated(updatedCase: CaseDetail) {
@@ -162,7 +233,8 @@ export default function Home() {
     )))
   }
 
-  const isSearching = submittedSearch.term.length > 0
+  const isSearching = submittedQuery.term.length > 0 || submittedQuery.region.length > 0 || submittedQuery.status !== CaseFilter.ALL || submittedQuery.startMonth.length > 0 || submittedQuery.endMonth.length > 0
+  const pageCount = Math.ceil(total / Pagination.DEFAULT_LIMIT)
   const searchPlaceholder = searchField === SearchField.EMAIL
     ? "Search email"
     : searchField === SearchField.DEVICE_ID
@@ -276,6 +348,48 @@ export default function Home() {
                   <SelectItem value={SearchField.EMAIL}>Email</SelectItem>
                 </SelectContent>
               </Select>
+              <div>
+                <label className="sr-only" htmlFor="start-month">Start month</label>
+                <Input
+                  className="h-9 w-36 border-slate-300 bg-white"
+                  id="start-month"
+                  onChange={(event) => setStartMonth(event.target.value)}
+                  type="month"
+                  value={startMonth}
+                />
+              </div>
+              <div>
+                <label className="sr-only" htmlFor="end-month">End month</label>
+                <Input
+                  className="h-9 w-36 border-slate-300 bg-white"
+                  id="end-month"
+                  onChange={(event) => setEndMonth(event.target.value)}
+                  type="month"
+                  value={endMonth}
+                />
+              </div>
+              <Select onValueChange={(value) => value && setStatusFilter(value)} value={statusFilter}>
+                <SelectTrigger aria-label="Status filter" className="h-9 min-w-30 border-slate-300 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CaseFilter.ALL}>All statuses</SelectItem>
+                  <SelectItem value={CaseStatus.OPEN}>Open</SelectItem>
+                  <SelectItem value={CaseStatus.RESOLVED}>Resolved</SelectItem>
+                </SelectContent>
+              </Select>
+              <div>
+                <label className="sr-only" htmlFor="region-filter">Region</label>
+                <Input
+                  className="h-9 w-32 border-slate-300 bg-white"
+                  id="region-filter"
+                  onChange={(event) => setRegion(event.target.value)}
+                  placeholder="Region"
+                  value={region}
+                />
+              </div>
+              <Button className="h-9" type="submit" variant="outline">Apply</Button>
+              <Button className="h-9" onClick={resetFilters} type="button" variant="ghost">Reset</Button>
               <span className="text-xs text-slate-500">
                 {role === Role.MANAGER ? "Read-only review" : "Analyst review"}
               </span>
@@ -301,6 +415,9 @@ export default function Home() {
                 <TableHeader className="bg-[#eff4ff]">
                   <TableRow className="hover:bg-[#eff4ff]">
                     <TableHead>Case ID</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Device ID</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Region</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
@@ -323,6 +440,9 @@ export default function Home() {
                             {caseItem.case_id}
                           </button>
                         </TableCell>
+                        <TableCell className="py-2 font-mono text-xs">{caseItem.user_id ?? "—"}</TableCell>
+                        <TableCell className="py-2 font-mono text-xs">{caseItem.device_id}</TableCell>
+                        <TableCell className="py-2 text-xs">{maskEmail(caseItem.user_email)}</TableCell>
                         <TableCell className="py-2 text-sm">{formatDate(caseItem.created_at)}</TableCell>
                         <TableCell className="py-2 text-sm">{caseItem.region}</TableCell>
                         <TableCell className="py-2 text-right font-mono text-xs">
@@ -346,6 +466,47 @@ export default function Home() {
                     ? "Try a different value or search field."
                     : "Seed the local database and refresh this page."}
                 </p>
+              </div>
+            )}
+            {!loading && !error && total > 0 && (
+              <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+                <p className="text-xs text-slate-500">
+                  Page {submittedQuery.page} of {pageCount}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    disabled={submittedQuery.page === Pagination.DEFAULT_PAGE}
+                    onClick={() => changePage(submittedQuery.page - 1)}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Previous
+                  </Button>
+                  {Array.from({ length: pageCount }).map((_, index) => {
+                    const page = index + Pagination.DEFAULT_PAGE
+                    return (
+                      <Button
+                        key={page}
+                        onClick={() => changePage(page)}
+                        size="sm"
+                        type="button"
+                        variant={submittedQuery.page === page ? "default" : "outline"}
+                      >
+                        {page}
+                      </Button>
+                    )
+                  })}
+                  <Button
+                    disabled={submittedQuery.page >= pageCount}
+                    onClick={() => changePage(submittedQuery.page + 1)}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </div>

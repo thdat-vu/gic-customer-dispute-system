@@ -15,7 +15,7 @@ almost directly into your submission doc's "Concerns & Tradeoffs" section.
 |---|---|---|
 | No authentication — anyone who can reach the API can read/write any case | Brief explicitly excludes auth | Add real session/token auth; move role enforcement server-side |
 | `editor_role` in audit log is self-reported by the client, not verified | API is intentionally role-agnostic (SRS §1) | Derive role from a verified session instead of a request body field |
-| `user_email`/`device_id` (PII) shown in full in v1 | You deprioritized masking to P2 given time budget | Implement masking (already designed as a stretch item in `01-product-scope.md`) and restrict full-value visibility to a permissioned role |
+| Email/device ID supplied by the API | List masks email but shows device ID; full values remain in detail with no real authorization | Add role-derived authorization and stricter PII display policy in production |
 | SQLite file stored unencrypted on disk | No deployment/production requirement in scope | Use an encrypted-at-rest managed database in production |
 | No rate limiting / no protection against abusive request volume | Single local user, not internet-facing | Add rate limiting at a gateway layer if ever exposed |
 | CORS allows the local frontend origin broadly | Local dev only, not deployed | Restrict CORS to known production origins |

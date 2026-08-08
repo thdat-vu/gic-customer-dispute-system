@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.constants import ApiMessage
 from app.models import Case, OutcomeAuditEntry
-from app.repositories import get_case_by_id, list_audit_entries, list_cases
+from app.repositories import count_cases, get_case_by_id, list_audit_entries, list_cases
 from app.services.errors import CaseNotFoundError
 
 
@@ -14,9 +14,20 @@ def get_case(session: Session, case_id: int) -> Case:
 
 
 def get_cases(
-    session: Session, search_field: str | None = None, query: str | None = None
-) -> list[Case]:
-    return list_cases(session, search_field, query)
+    session: Session,
+    search_field: str | None = None,
+    query: str | None = None,
+    region: str | None = None,
+    status: str | None = None,
+    start_month: str | None = None,
+    end_month: str | None = None,
+    page: int = 1,
+    limit: int = 20,
+) -> tuple[list[Case], int]:
+    return (
+        list_cases(session, search_field, query, region, status, start_month, end_month, page, limit),
+        count_cases(session, search_field, query, region, status, start_month, end_month),
+    )
 
 
 def get_case_history(

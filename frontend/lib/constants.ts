@@ -26,6 +26,20 @@ export class SearchField {
   static readonly EMAIL = "email"
 }
 
+export class Pagination {
+  static readonly DEFAULT_PAGE = 1
+  static readonly DEFAULT_LIMIT = 20
+}
+
+export class DateFormat {
+  static readonly MONTH_PREFIX_LENGTH = 7
+  static readonly YEAR_START_MONTH = "01"
+}
+
+export class CaseFilter {
+  static readonly ALL = "all"
+}
+
 export class CaseStatus {
   static readonly OPEN = "open"
   static readonly RESOLVED = "resolved"
@@ -55,6 +69,7 @@ export class UiText {
   static readonly UNRECORDED_OUTCOME = "Unrecorded"
   static readonly API_ERROR = "Something went wrong. Please try again."
   static readonly OUTCOME_REQUIRED = "Choose an outcome before saving."
+  static readonly MONTH_RANGE_INVALID = "Start month must not be after end month."
   static readonly SAVE_OUTCOME = "Save outcome"
   static readonly OUTCOME_SAVED = "Outcome saved."
 }

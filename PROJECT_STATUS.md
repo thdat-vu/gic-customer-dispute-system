@@ -9,8 +9,8 @@ scope.
 
 ## Current position
 
-**Milestone 6 is complete.** The next approved implementation work is **Milestone 7 — README +
-polish**.
+**All core implementation milestones (0–7) are complete.** Approved stretch items Pagination
+and list email masking are complete; only `resolved_at`/alternate trend axis remains deferred.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
@@ -20,8 +20,9 @@ polish**.
 | 3 — Backend API layer | Complete | `83c8551 feat: add dispute API endpoints` | Five documented routes appear in OpenAPI; shared errors/CORS work; P1 integration tests pass. |
 | 4 — Frontend list/search + case detail | Complete | `c69b49d feat: add case management interface` | Browse/search, read-only detail, loading/empty/error states, and UI-only role switcher run against the real API; lint/build passed. |
 | 5 — Frontend outcome + history | Complete | `fbefce6 feat: add outcome management interface` | Analyst capture/correction calls the real API with client validation; Manager-only history is fetched/rendered and role switch changes the affordance without reload. |
-| 6 — Frontend trend view | Complete | Current working-tree evidence: `frontend/components/trend-view.tsx`, `frontend/app/page.tsx`, `frontend/lib/api.ts`, `frontend/lib/constants.ts` | Both roles can open Month/Region grouping, see outcome counts or explicit loading/error/empty states; local SQLite/API spot-check matches the visible monthly values. Commit pending. |
-| 7 — README + polish | Not started | README has current local run, seed, and test instructions, but the final handoff audit has not occurred | Pending complete implemented/skipped scope, architecture explanation, and clean-checkout verification. |
+| 6 — Frontend trend view | Complete | `4ebc05e feat: add outcome trend view` | Both roles can open Month/Region grouping, see outcome counts or explicit loading/error/empty states; local SQLite/API spot-check matches the visible monthly values. |
+| 7 — README + polish | Complete | Current working-tree evidence: `README.md`, `PROJECT_STATUS.md`, `submission-draft.md`, `ai-usage-log.md` | README contains verified local install/run/test commands, architecture, implemented/deferred scope, and API summary. Install, lint, backend tests, and webpack compile passed; default Turbopack build is blocked by this sandbox's IPC-port policy. Commit pending. |
+| Stretch — list refinement | Complete | Current working-tree evidence: backend list route/service/repository/tests and `frontend/app/page.tsx` | One-based 20-row pagination with numeric controls; January-to-current-month default bounds; exact status/region filters; Reset; and masked list email. Commit pending. |
 
 ## Completed implementation evidence
 
@@ -89,8 +90,9 @@ polish**.
 
 - The desktop-first Cases workspace uses the approved application shell, dense table, and
   right-side 480px detail sheet from `DESIGN.md`.
-- The table fetches all cases from the real API, preserves newest-first server order, and submits
-  a selected-field (`user_id`, `device_id`, or `email`) search to the same endpoint.
+- The table fetches the documented current page from the real API, preserves newest-first server
+  order, and submits a selected-field (`user_id`, `device_id`, or `email`) search to the same
+  endpoint.
 - Case navigation uses the surrogate integer `id`; the detail sheet shows the documented full PII
   and reference fields. It intentionally contains no editor or history section yet.
 - Loading skeleton, no-cases, no-search-results, API-error, and detail-loading/detail-error
@@ -133,7 +135,7 @@ polish**.
   changing the UI-only acting role; both Analyst and Manager may view it.
 - `TrendView` calls the existing `GET /api/trends` contract and renders the three documented
   outcome counts in a compact table. The grouping control exposes the already-supported `month`
-  and `region` options; it does not add screenshot-only date ranges or filters.
+  and `region` options; list-only Month start/end filtering is separate from trend aggregation.
 - Loading, API error with retry, and the explicit zero-resolved-cases empty state are rendered.
   A table was chosen instead of a chart to keep the bounded assessment UI dependency-free while
   still providing the complete required outcome breakdown.
@@ -152,6 +154,53 @@ polish**.
   git diff --check                            # passed
   ```
 
+### Milestone 7 — README + polish
+
+- The top-level README is now a standalone handoff: prerequisites, two-terminal local setup,
+  explicit one-time seed warning, frontend/backend addresses, architecture, implemented scope,
+  intentional deferrals, API summary, and validation commands.
+- It explicitly states that the seed loader is not idempotent, preventing accidental duplicate
+  local imports after outcomes have been recorded.
+- Validation commands are documented only when present in the repository manifests: backend
+  pytest and frontend lint/build. No test framework was added solely for documentation polish.
+- Handoff validation recorded at implementation time:
+
+  ```text
+  cd backend && uv sync                     # passed
+  cd backend && uv run pytest                # 16 passed (one upstream deprecation warning)
+  cd frontend && npm ci                      # passed
+  cd frontend && npm run lint                # passed
+  cd frontend && npm run build -- --webpack  # passed
+  cd frontend && npm run build               # blocked by sandbox IPC-port policy, not source error
+  git diff --check                           # passed
+  ```
+
+### Approved stretch — pagination, month range, and list email masking
+
+- `GET /api/cases` defaults to page 1 / 20 rows and validates `page >= 1`, `1 <= limit <= 20`,
+  inclusive `created_at` month bounds, exact status, and case-insensitive exact region. Filters
+  and search occur before newest-first paging; `total` remains the pre-page count.
+- The Case table now exposes user ID and device ID for scanning, while masking email as first
+  character + five asterisks + domain. The API, search request, and case detail retain full
+  source values.
+- The local SQLite database was explicitly reset after detecting accidental double-seeding:
+  `backend/data/app.db` was removed with user approval, then seeded once. Verification returned
+  exactly `220` records and two physical `CASE-00213` rows.
+- The month controls reject an end month before the start month client-side; the backend retains
+  the contract-level 422 validation for direct callers.
+- The UI defaults its month range to January of the current year through the current month and
+  provides direct numeric page buttons, Reset, Status, and Region controls. Browser URL query
+  synchronization remains deliberately unimplemented because it is not a documented requirement.
+- Validation recorded at implementation time:
+
+  ```text
+  cd backend && uv run pytest                 # 21 passed (one upstream deprecation warning)
+  cd frontend && npm run lint                 # passed
+  cd frontend && npm run build -- --webpack   # passed
+  sqlite3 backend/data/app.db <count query>   # 220 records; CASE-00213 count = 2
+  git diff --check                            # passed
+  ```
+
 ## Supporting preparation (not an implementation milestone)
 
 - Specification and architecture documents were added in `204c7ef docs: add documents [DatVT]`.
@@ -163,8 +212,9 @@ polish**.
 
 ## Next work boundary
 
-Start only Milestone 7. Audit and complete the top-level README against the implemented scope,
-then verify the documented run/test instructions. Do not start stretch work yet.
+Core implementation and the approved two stretch items are complete. Do not start the remaining
+`resolved_at` stretch automatically; next use `submission-audit` and complete the external
+submission document/video links.
 
 ## Update rules
 

@@ -97,7 +97,7 @@ the capture flow.
 | BR-1 | Valid outcome values | Exactly `won`, `lost`, `fraud_confirmed` — no other values accepted through the capture flow | Matches brief's enum; seed data contains an invalid `maybe` value used as a deliberate test row (see §9) |
 | BR-2 | Outcome correction | Allowed. Every edit creates an audit record: previous value, new value, editor identity (role, since no auth), timestamp | You chose this explicitly — supports the "final record but can be corrected" tension in the brief, and gives Manager something concrete to oversee |
 | BR-3 | Case deletion | **Not in scope.** No delete capability of any kind (soft or hard) | Not requested by the original brief; dropped to protect the 8–12h time budget |
-| BR-4 | Sensitive fields (email, device_id) | Full display in v1; masking is a **P2 stretch goal**, not required for submission | You explicitly deprioritized this given the time budget |
+| BR-4 | Sensitive fields (email, device_id) | List displays `user_id`/`device_id` in full and masks email; full values remain available in detail/search | Approved post-core stretch decision balances scanning with less email exposure |
 | BR-5 | Search/filter scope | Minimum viable: search by **one** of user_id / device_id / email, satisfying the brief's "at least one" requirement, no more | Chosen to protect time budget |
 | BR-6 | Trend view time basis | Grouped by `created_at` (case-opened date), monthly buckets | Simplicity + uses existing seed field; **known limitation**: a case opened in January but resolved in May will show in January's bucket, which may misrepresent "when the outcome actually happened." Documented as an accepted limitation, not silently ignored. |
 | BR-7 | Malformed/edge-case seed rows (see §9) | Out of scope to clean or specially handle; imported as-is | You explicitly prioritized speed and stayed within "engineer analyzes and flags fraud, not general data hygiene" framing |
@@ -174,5 +174,5 @@ No rubric was provided beyond the brief itself. Success is defined as satisfying
 - Authentication/authorization (real security)
 - Deployment, containerization, CI/CD
 - Data cleaning/validation of the seed dataset's anomalous rows
-- PII masking (deferred to stretch/P2)
+- Further PII controls beyond list email masking (e.g. device masking or role-based exposure)
 - Bulk actions on cases

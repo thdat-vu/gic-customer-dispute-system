@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from app.constants import SearchField
+from app.constants import CaseStatus
 
 
 SearchFieldValue = Literal[
@@ -10,6 +11,8 @@ SearchFieldValue = Literal[
     SearchField.DEVICE_ID,
     SearchField.EMAIL,
 ]
+
+CaseStatusValue = Literal[CaseStatus.OPEN, CaseStatus.RESOLVED]
 
 
 class CaseResponse(BaseModel):

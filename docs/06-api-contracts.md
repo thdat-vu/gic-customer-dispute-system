@@ -25,8 +25,18 @@ List/search cases. Traces to FR-1, FR-2.
 |---|---|---|
 | `search_field` | no | one of `user_id`, `device_id`, `email`; required *together with* `q` — omit both for unfiltered list |
 | `q` | no | partial/contains, case-insensitive match against `search_field` |
-| `page` | no | stretch/P2 (§4.1 NFR); omit → full list |
-| `limit` | no | stretch/P2; omit → full list |
+| `page` | no, default `1` | one-based page number; must be ≥1 |
+| `limit` | no, default/max `20` | records per page; must be 1–20 |
+| `start_month` | no | inclusive lower `created_at` month, formatted `YYYY-MM` |
+| `end_month` | no | inclusive upper `created_at` month, formatted `YYYY-MM`; must not precede `start_month` |
+| `status` | no | exact enum: `open` or `resolved` |
+| `region` | no | exact case-insensitive region value, e.g. `APAC-JP` |
+
+Search, exact status/region filters, and optional month bounds are applied before the documented
+newest-first sort and then pagination. `total` remains the number of matches before pagination.
+Supplying only one month bound is valid (open-ended range); omitting both leaves the date range
+unfiltered. The frontend UI initializes from January of the current UTC year through the current
+UTC month, but this API does not impose that default on callers that omit the bounds.
 
 **Response `200`**
 ```json
@@ -54,8 +64,8 @@ endpoint) to keep the list payload light. `id` (surrogate) is the field the fron
 navigate to a case's detail view — `case_id` is display-only and may repeat across items (see
 `CASE-00213`).
 
-**Error `422`**: `search_field` provided without `q` (or vice versa) — uses the shared error
-envelope (§6).
+**Error `422`**: `search_field` provided without `q` (or vice versa), invalid pagination value,
+malformed month, or `start_month` after `end_month` — uses the shared error envelope (§6).
 
 ---
 

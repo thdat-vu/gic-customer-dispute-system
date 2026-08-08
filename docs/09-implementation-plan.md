@@ -75,6 +75,11 @@ In priority order, per earlier decisions:
 2. Partial PII masking in list view.
 3. `resolved_at` field + alternate trend axis.
 
+**Post-core update:** Stretch items 1 and 2 were approved and implemented with one-based page
+numbers, a default/maximum 20-row page, optional inclusive `created_at` month bounds, and masked
+list email. Exact `region` and `status` filters plus Reset/direct-page UI were added in the same
+post-core list refinement. Item 3 remains unstarted.
+
 **Do not start stretch work with less than ~2h remaining before your own personal deadline for
 writing the doc + recording the video** — an unfinished stretch feature reads worse than a
 clean core submission with an honest "didn't get to X" note in Concerns & Tradeoffs.

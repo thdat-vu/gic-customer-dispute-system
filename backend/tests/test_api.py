@@ -122,6 +122,84 @@ def test_partial_search_parameters_use_shared_validation_envelope(
     assert response.json()["error"]["fields"][0]["field"] == "search_field"
 
 
+def test_case_list_paginates_after_month_filter_and_reports_unpaged_total(
+    client: TestClient,
+) -> None:
+    for index in range(22):
+        add_case(
+            client,
+            make_case(
+                case_id=f"CASE-PAGE-{index}",
+                created_at=f"2026-02-{index + 1:02d}T10:00:00Z",
+            ),
+        )
+    add_case(client, make_case(case_id="CASE-JANUARY", created_at="2026-01-31T10:00:00Z"))
+
+    first_page = client.get(
+        "/api/cases",
+        params={"start_month": "2026-02", "end_month": "2026-02"},
+    )
+    second_page = client.get(
+        "/api/cases",
+        params={"start_month": "2026-02", "end_month": "2026-02", "page": 2},
+    )
+
+    assert first_page.status_code == 200
+    assert first_page.json()["total"] == 22
+    assert len(first_page.json()["items"]) == 20
+    assert first_page.json()["items"][0]["case_id"] == "CASE-PAGE-21"
+    assert second_page.status_code == 200
+    assert [item["case_id"] for item in second_page.json()["items"]] == [
+        "CASE-PAGE-1",
+        "CASE-PAGE-0",
+    ]
+
+
+def test_case_list_combines_exact_region_and_status_filters(client: TestClient) -> None:
+    matching_case_id = add_case(
+        client,
+        make_case(
+            case_id="CASE-MATCHING-FILTER",
+            region="APAC-VN",
+            status=CaseStatus.RESOLVED,
+        ),
+    )
+    add_case(client, make_case(case_id="CASE-OPEN-FILTER", region="APAC-VN"))
+    add_case(
+        client,
+        make_case(
+            case_id="CASE-OTHER-REGION",
+            region="EU-FR",
+            status=CaseStatus.RESOLVED,
+        ),
+    )
+
+    response = client.get("/api/cases", params={"region": "apac-vn", "status": "resolved"})
+
+    assert response.status_code == 200
+    assert response.json()["total"] == 1
+    assert response.json()["items"][0]["id"] == matching_case_id
+
+
+@pytest.mark.parametrize(
+    ("parameters", "field"),
+    [
+        ({"page": 0}, "page"),
+        ({"limit": 21}, "limit"),
+        ({"start_month": "2026-03", "end_month": "2026-02"}, "start_month"),
+        ({"start_month": "2026-13"}, "start_month"),
+    ],
+)
+def test_case_list_rejects_invalid_pagination_or_month_range(
+    client: TestClient, parameters: dict[str, int | str], field: str
+) -> None:
+    response = client.get("/api/cases", params=parameters)
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert response.json()["error"]["fields"][0]["field"] == field
+
+
 def test_case_history_returns_empty_entries_for_case_without_audit(client: TestClient) -> None:
     case_id = add_case(client, make_case())
 

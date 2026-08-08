@@ -117,8 +117,9 @@ The color palette is dominated by a neutral scale to maintain a calm, focused en
 - **Primary:** An industrial Indigo (#2563EB) used exclusively for primary actions and active states.
 - **Surface:** The background uses a clean White (#FFFFFF) with a Subtle Gray (#F8FAFC) for secondary regions like sidebars or table headers to provide structural anchoring.
 - **Semantic:** High-contrast status colors are reserved for outcome indicators. "Won" cases use an emerald green, "Lost" use a ruby red, and "Fraud" alerts use a vivid amber.
-- **PII display (v1):** `user_email` and `device_id` are shown in full, per BR-4 and the
-  SRS. PII masking is a deferred P2/stretch item, so it is not rendered by the core UI.
+- **PII display (post-core stretch):** the list shows `user_id` and `device_id` in full, but
+  masks email as first-character + five asterisks + domain. Detail still shows the full supplied
+  fields, while search uses unmasked values.
 
 ## Typography
 
@@ -171,10 +172,8 @@ Right-aligned containers for deep-dives into a specific dispute. Drawers must in
 Input fields must have clearly defined focus states using the Primary color. Error messages appear immediately below the field in the "Lost" status color.
 
 ### PII Masking
-The visual references use masked identifiers, but v1 follows the behavioral specification:
-show the supplied `user_id`, `user_email`, and `device_id` in full. Do not add copy controls,
-visibility toggles, or an IP-address field; none is required in the core scope. PII masking may
-be considered only after the core milestones are complete.
+The list masks email but shows the supplied `user_id` and `device_id` in full; detail shows all
+three values in full. Do not add copy controls, visibility toggles, or an IP-address field.
 
 ### Subtle Charts
 Line and bar charts for dispute volume should use the Primary color for the main data series and Neutral colors for comparisons. No fills or gradients under lines.
@@ -194,5 +193,7 @@ visual treatment only. When they differ, the behavioral documents win.
   outcome editor to Milestone 5 and audit history to the Manager-only Milestone 5 work.
 - Defer the chart and trend controls to Milestone 6. The required trend grouping is month and/or
   region, not the screenshot’s date-range behavior.
-- Pagination shown in the case-list reference is P2/stretch only. The core list returns all
-  cases in one response.
+- The post-core list uses compact Previous/Next pagination with a maximum 20-row page and
+  direct page-number controls, plus Month start/end, Status, Region, Apply, and Reset controls.
+  The default Month range is January of the current year through the current month. Do not add
+  screenshot-only date-range presets.

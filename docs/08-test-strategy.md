@@ -32,6 +32,10 @@ clicking around the UI — exactly what a reviewer is likely checking for.
 | `POST /cases/{id}/outcome` with an invalid enum value returns `422` | API validation boundary |
 | `GET /cases?search_field=user_id&q=<partial>` returns only matching cases (partial, case-insensitive) | FR-2 |
 | `GET /cases/{id}/history` returns entries most-recent-first, and an empty array (not an error) for a never-resolved case | FR-6 |
+| `GET /cases` applies one-based pagination after search/month filtering, reports pre-page `total`, and rejects invalid page/limit/month ranges with the shared 422 envelope | Approved P2 pagination/date-range decision |
+| List display masks email without changing the unmasked `email` search request or case-detail value | Approved P2 PII-display decision |
+| Month-range form blocks `start_month > end_month` before requesting the API; backend retains matching 422 coverage | Approved P2 date-range validation decision |
+| `GET /cases` combines exact case-insensitive region and enum status filters before pagination | Approved P2 list-filter decision |
 
 ## 3. Priority P2 — frontend tests (only if time remains)
 

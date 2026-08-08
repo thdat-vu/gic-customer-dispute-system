@@ -101,6 +101,68 @@ turning a one-hour milestone into chart-library setup. I spot-checked the fronte
 monthly API values against the seeded SQLite query before marking the milestone complete. Before
 final submission, I should verify this describes my own review and decision accurately.
 
+## Candidate 08 — Milestone 7 README handoff
+
+### AI-generated drafting support
+
+Codex assembled a README outline from the verified package manifests and the approved scope:
+local setup, one-time seed behavior, run commands, architecture, implemented/deferred scope,
+and validation commands.
+
+### Review point retained for final disclosure
+
+The README explicitly warns that the seed loader is not idempotent. I retained that warning
+instead of suggesting an undocumented destructive reset command, because rerunning the importer
+after recording outcomes would append duplicate source records.
+
+### Reason for change
+
+This makes a fresh-clone path reproducible while protecting the local assessment data from an
+easy setup mistake. Before submission, I should confirm this entry accurately reflects my own
+review of the generated README and retain only a genuine before/after example in the final
+disclosure.
+
+## Candidate 09 — Post-core list stretch decisions
+
+### AI-assisted ambiguity review
+
+Codex identified that the original pagination stretch did not define page indexing, page size,
+month-range semantics, or the list PII display contract. It also detected that the local database
+had 440 rows because the non-idempotent seed command had run twice.
+
+### Candidate decisions and result
+
+I approved one-based pagination, default/maximum 20 rows, optional inclusive `start_month` /
+`end_month` bounds on `created_at`, and list email masking while keeping user ID/device ID
+visible. I also explicitly authorized resetting only the local ignored SQLite database and
+reseeding it once to recover the required 220 records.
+
+### Reason for change
+
+These constraints keep the stretch small, make page controls predictable, and reduce routine
+email exposure without breaking the documented unmasked search/detail behavior. The reset was
+necessary to restore FR-9's 220-record acceptance condition; it was not an application feature.
+
+## Candidate 10 — List refinement after visual review
+
+### AI-assisted options
+
+Codex identified two possible pagination implementations: add `fastapi-pagination`, or retain
+the already-tested query/offset implementation and add direct numeric page controls. It also
+identified browser URL synchronization as optional deep-link behavior rather than a requirement.
+
+### Candidate direction
+
+I retained the existing small pagination implementation, added direct page buttons, Reset, exact
+status/region filtering, and changed the default month range to January of the current year
+through the current month. I did not add URL query synchronization or a new dependency.
+
+### Reason for change
+
+The feature set improves analyst scanning while preserving a small, documented API surface. The
+existing `total` response was enough to render numeric pages for this bounded dataset, so an
+additional pagination library would not have solved a concrete problem.
+
 ## Candidate 02 — Documentation consistency review
 
 ### AI-assisted finding

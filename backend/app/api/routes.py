@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 
-from app.constants import ApiMessage, ApiRoute, TrendGroupBy
+from app.constants import ApiMessage, ApiRoute, MonthRange, Pagination, TrendGroupBy
 from app.database import get_session
 from app.schemas import (
     CaseDetailResponse,
@@ -14,7 +14,7 @@ from app.schemas import (
     OutcomeSubmission,
     TrendResponse,
 )
-from app.schemas.cases import SearchFieldValue
+from app.schemas.cases import CaseStatusValue, SearchFieldValue
 from app.services import (
     get_case,
     get_case_history,
@@ -43,6 +43,12 @@ def list_cases(
     database_session: DatabaseSession,
     search_field: SearchFieldValue | None = None,
     q: str | None = None,
+    region: str | None = None,
+    case_status: Annotated[CaseStatusValue | None, Query(alias="status")] = None,
+    page: int = Query(default=Pagination.DEFAULT_PAGE, ge=Pagination.DEFAULT_PAGE),
+    limit: int = Query(default=Pagination.DEFAULT_LIMIT, ge=1, le=Pagination.MAX_LIMIT),
+    start_month: Annotated[str | None, Query(pattern=MonthRange.PATTERN)] = None,
+    end_month: Annotated[str | None, Query(pattern=MonthRange.PATTERN)] = None,
 ) -> CaseListResponse:
     if (search_field is None) != (q is None):
         raise RequestValidationError(
@@ -55,8 +61,29 @@ def list_cases(
                 }
             ]
         )
-    cases = get_cases(database_session, search_field, q)
-    return CaseListResponse(items=cases, total=len(cases))
+    if start_month is not None and end_month is not None and start_month > end_month:
+        raise RequestValidationError(
+            [
+                {
+                    "type": "value_error",
+                    "loc": ("query", "start_month"),
+                    "msg": ApiMessage.START_MONTH_MUST_NOT_FOLLOW_END_MONTH,
+                    "input": start_month,
+                }
+            ]
+        )
+    cases, total = get_cases(
+        database_session,
+        search_field,
+        q,
+        region,
+        case_status,
+        start_month,
+        end_month,
+        page,
+        limit,
+    )
+    return CaseListResponse(items=cases, total=total)
 
 
 @router.get(

@@ -25,6 +25,16 @@ class SearchField:
     EMAIL = "email"
 
 
+class Pagination:
+    DEFAULT_PAGE = 1
+    DEFAULT_LIMIT = 20
+    MAX_LIMIT = 20
+
+
+class MonthRange:
+    PATTERN = r"^\d{4}-(0[1-9]|1[0-2])$"
+
+
 class TrendGroupBy:
     MONTH = "month"
     REGION = "region"
@@ -50,6 +60,7 @@ class ApiMessage:
     CASE_NOT_FOUND = "No case found with id {case_id}"
     VALIDATION_ERROR = "Request failed validation."
     SEARCH_PARAMETERS_REQUIRED_TOGETHER = "search_field and q must be provided together"
+    START_MONTH_MUST_NOT_FOLLOW_END_MONTH = "start_month must not follow end_month"
     HTTP_ERROR = "Request could not be completed."
     INTERNAL_ERROR = "Internal error, please try again."
 

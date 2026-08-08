@@ -132,7 +132,8 @@ reach the API" failure mode is easy to lose time to otherwise.
 
 ## 5. Open item carried forward
 
-- **Pagination (stretch/P2, per NFR 4.1):** if implemented, it's additive at both layers —
-  `repositories/` gains optional limit/offset params, `api/` gains optional query params,
-  `frontend` gains a page control. Since it's optional, it doesn't change any decision above; it
-  will be represented as optional query params in `06-api-contracts.md`.
+- **Pagination (implemented post-core):** repositories apply `limit`/`offset` after the shared
+  search/month/status/region-filter statement; the API validates one-based `page`, capped
+  `limit`, and month bounds; the frontend renders Previous/Next and direct page controls.
+  Contract details are in
+  `06-api-contracts.md` §1.

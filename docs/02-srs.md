@@ -55,8 +55,19 @@ in case you intended trend to be Manager-exclusive — easy to override before P
 
 ### FR-1 — List cases
 **Given** any actor is on the case list screen, **when** no search term is entered, **then**
-all cases are shown, sorted newest-first by `created_at`.
+cases are shown sorted newest-first by `created_at`.
 *Traces to:* BR (Phase-1 desired workflow), resolved OQ-2 (sort order).
+
+**Stretch decision (approved after core completion):** the list is paginated. `page` is
+one-based; the default and maximum page size are 20. An optional inclusive `start_month` /
+`end_month` range (`YYYY-MM`) filters on `created_at` before sorting and pagination. `total`
+counts all records after search/month filtering, not only the current page.
+The frontend initializes `start_month` to January of the current UTC year and `end_month` to the
+current UTC month, then sends that range on initial load; users may replace or clear either
+bound. Exact case-insensitive `region` and enum `status` filters are applied with search/month
+bounds before pagination. A start month after the end month is
+blocked client-side with a clear validation message; the API also returns its shared 422 envelope
+for direct callers.
 
 ### FR-2 — Search cases by single field
 **Given** an actor selects one search field (`user_id` / `device_id` / `email`) and types a
@@ -150,15 +161,14 @@ found two additional anomalies the original pass missed — see `00-problem-stat
 
 ### 4.1 Performance
 - Dataset is small (220 seed rows); no performance optimization is required for v1.
-- **Pagination (list endpoint + UI):** classified as **stretch/P2**, per your instruction ("nếu
-  đủ thời gian còn lại"). Base requirement (P0): return the full list, sorted, in one response.
-  If time allows, add optional `page`/`limit` query params on the list endpoint and a
-  corresponding UI control — designed as an additive, backward-compatible extension (omitting
-  the params returns the full list), so it can be dropped without breaking FR-1 if time runs out.
+- **Pagination (list endpoint + UI):** implemented post-core. The list defaults to one-based
+  page 1 with 20 records and caps `limit` at 20; see FR-1 and `06-api-contracts.md` §1.
 
 ### 4.2 Data sensitivity / PII
-- `user_email` and `device_id` are shown in full in v1 (BR-4). Masking is stretch/P2 and, if
-  implemented, must not remove the ability to search by the unmasked value (FR-2).
+- **Stretch decision (approved after core completion):** the list displays `user_id` and
+  `device_id` in full to support analyst scanning. It displays a masked email in the form
+  `d*****@gmail.com`; the complete email remains searchable and is available in the case detail.
+  Display masking must not change the unmasked API data or FR-2 search behavior.
 
 ### 4.3 Error handling
 - Client-side validation prevents obviously invalid submissions (missing outcome) before hitting

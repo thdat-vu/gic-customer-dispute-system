@@ -24,8 +24,8 @@ The unit of work: one customer dispute.
 | `id` | identifier (surrogate, system-generated) | immutable | **actual identity of a `Case`**; used for all addressing (API paths, FK targets) |
 | `case_id` | string | immutable | from seed data, e.g. `CASE-00034`; **not unique** — do not use as a lookup key or FK target |
 | `user_id` | nullable string | immutable | reference to the customer; not editable via this tool; can be blank in source data (`CASE-00218`) — treated as legitimately missing, not an error |
-| `user_email` | string | immutable | PII — displayed in full per BR-4 (v1) |
-| `device_id` | string | immutable | PII-adjacent — displayed in full per BR-4 (v1) |
+| `user_email` | string | immutable | PII — masked in the list, full value in detail and unmasked search request per BR-4 |
+| `device_id` | string | immutable | PII-adjacent — displayed in full for analyst scanning per BR-4 |
 | `amount` | decimal | immutable | can be negative in seed data (`CASE-00216`) — accepted as-is, no business meaning assigned to sign (out of scope to interpret) |
 | `currency` | string | immutable | ISO-like code from seed data (e.g. `VND`, `USD`) |
 | `created_at` | timestamp | immutable | can be a future date in seed data (`CASE-00217`) — accepted as-is |

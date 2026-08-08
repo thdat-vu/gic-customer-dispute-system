@@ -19,8 +19,8 @@ SQLAlchemy models in `backend/app/models/`.
 | `id` | INTEGER | PRIMARY KEY AUTOINCREMENT | surrogate key, system-generated; **this is the identity used everywhere** (API paths, FK targets) — not `case_id` |
 | `case_id` | TEXT | NOT NULL, INDEX (not unique) | e.g. `CASE-00034`, from seed data; **can repeat** — `CASE-00213` appears on 2 separate rows |
 | `user_id` | TEXT | NULLABLE, INDEX | search target (FR-2); blank for `CASE-00218` — stored as SQL `NULL`, not empty string |
-| `user_email` | TEXT | NOT NULL, INDEX | search target (FR-2); PII, shown in full (BR-4 v1) |
-| `device_id` | TEXT | NOT NULL, INDEX | search target (FR-2); PII-adjacent, shown in full (BR-4 v1) |
+| `user_email` | TEXT | NOT NULL, INDEX | search target (FR-2); API/detail retain full value, list masks it per BR-4 |
+| `device_id` | TEXT | NOT NULL, INDEX | search target (FR-2); displayed in full for analyst scanning per BR-4 |
 | `amount` | REAL | NOT NULL | SQLite has no true DECIMAL type; float precision is an accepted limitation since amount is display-only in this tool, never computed/summed anywhere in scope |
 | `currency` | TEXT | NOT NULL | e.g. `USD`, not validated against an ISO list (out of scope) |
 | `created_at` | TEXT (ISO 8601) | NOT NULL, INDEX | index supports default sort (FR-1) and month-grouping for trend (FR-7); stored as ISO string, matches seed CSV format directly |

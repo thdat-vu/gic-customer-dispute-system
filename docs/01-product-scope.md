@@ -37,7 +37,6 @@ and Functional Requirements (Phase 4)
 |---|---|
 | Case deletion (soft or hard) | Not requested by the original brief; dropped after review to protect the time budget |
 | Real authentication / authorization | Explicitly excluded by the brief |
-| PII masking for email/device_id | Deprioritized to P2/stretch by your decision (BR-4) |
 | Data validation/cleanup of the seed dataset's anomalous rows (`CASE-00220`, `CASE-00215`, `CASE-00216`, `CASE-00217`) | Explicitly deprioritized (BR-7); imported as-is |
 | Fraud detection or decision-making logic | Out of the tool's purpose entirely — this tool *records* outcomes, it does not determine them |
 | Bulk edit / bulk import UI beyond the initial seed load | Not requested; time-budget risk |
@@ -51,10 +50,9 @@ and Functional Requirements (Phase 4)
 ## 3. Stretch goals (only if time remains after core scope is done and tested)
 
 Ordered by suggested priority if you do have spare time:
-1. Partial PII masking in list view (e.g., `da***@inbox.test`), full value visible in detail view
-2. `resolved_at` timestamp captured at outcome-capture time, offered as an alternative/second
+1. `resolved_at` timestamp captured at outcome-capture time, offered as an alternative/second
    trend axis alongside the `created_at`-based monthly view
-3. Additional filters (e.g., by `region`, `status`, `outcome`) on top of the required minimum
+2. Additional filters beyond the implemented exact `region` and `status` filters (e.g., outcome)
 
 > ⚠️ Recommendation: do not start stretch goals until core scope (§1) is fully working, tested,
 > and documented. The brief explicitly rewards a "focused, well-reasoned submission" over

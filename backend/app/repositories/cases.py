@@ -13,9 +13,14 @@ def add_audit_entry(session: Session, entry: OutcomeAuditEntry) -> None:
     session.add(entry)
 
 
-def list_cases(
-    session: Session, search_field: str | None = None, query: str | None = None
-) -> list[Case]:
+def filtered_cases_statement(
+    search_field: str | None = None,
+    query: str | None = None,
+    region: str | None = None,
+    status: str | None = None,
+    start_month: str | None = None,
+    end_month: str | None = None,
+):
     statement = select(Case)
     if search_field is not None and query is not None:
         search_column = {
@@ -25,7 +30,55 @@ def list_cases(
         }[search_field]
         statement = statement.where(func.lower(search_column).contains(query.lower()))
 
-    return list(session.scalars(statement.order_by(Case.created_at.desc())))
+    created_month = func.substr(Case.created_at, 1, 7)
+    if start_month is not None:
+        statement = statement.where(created_month >= start_month)
+    if end_month is not None:
+        statement = statement.where(created_month <= end_month)
+    if region is not None:
+        statement = statement.where(func.lower(Case.region) == region.lower())
+    if status is not None:
+        statement = statement.where(Case.status == status)
+
+    return statement
+
+
+def list_cases(
+    session: Session,
+    search_field: str | None = None,
+    query: str | None = None,
+    region: str | None = None,
+    status: str | None = None,
+    start_month: str | None = None,
+    end_month: str | None = None,
+    page: int = 1,
+    limit: int = 20,
+) -> list[Case]:
+    statement = filtered_cases_statement(
+        search_field, query, region, status, start_month, end_month
+    )
+    offset = (page - 1) * limit
+    return list(
+        session.scalars(
+            statement.order_by(Case.created_at.desc()).offset(offset).limit(limit)
+        )
+    )
+
+
+def count_cases(
+    session: Session,
+    search_field: str | None = None,
+    query: str | None = None,
+    region: str | None = None,
+    status: str | None = None,
+    start_month: str | None = None,
+    end_month: str | None = None,
+) -> int:
+    statement = filtered_cases_statement(
+        search_field, query, region, status, start_month, end_month
+    )
+    count_statement = select(func.count()).select_from(statement.subquery())
+    return session.scalar(count_statement) or 0
 
 
 def list_audit_entries(session: Session, case_ref_id: int) -> list[OutcomeAuditEntry]:

@@ -41,9 +41,19 @@ export type TrendsResponse = {
   buckets: TrendBucket[]
 }
 
-type CaseListResponse = {
+export type CaseListResponse = {
   items: CaseListItem[]
   total: number
+}
+
+export type CaseListQuery = {
+  endMonth?: string
+  page?: number
+  region?: string
+  searchField?: string
+  searchTerm?: string
+  startMonth?: string
+  status?: string
 }
 
 type ApiErrorResponse = {
@@ -75,14 +85,34 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T
 }
 
-export async function getCases(
-  searchField?: string,
-  searchTerm?: string,
-): Promise<CaseListResponse> {
+export async function getCases({
+  endMonth,
+  page,
+  region,
+  searchField,
+  searchTerm,
+  startMonth,
+  status,
+}: CaseListQuery = {}): Promise<CaseListResponse> {
   const parameters = new URLSearchParams()
   if (searchField && searchTerm) {
     parameters.set("search_field", searchField)
     parameters.set("q", searchTerm)
+  }
+  if (page) {
+    parameters.set("page", String(page))
+  }
+  if (startMonth) {
+    parameters.set("start_month", startMonth)
+  }
+  if (endMonth) {
+    parameters.set("end_month", endMonth)
+  }
+  if (region) {
+    parameters.set("region", region)
+  }
+  if (status) {
+    parameters.set("status", status)
   }
   const query = parameters.size > 0 ? `?${parameters.toString()}` : ""
   return request<CaseListResponse>(`${ApiPath.CASES}${query}`)
