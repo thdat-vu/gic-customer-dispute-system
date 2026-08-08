@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import CheckConstraint, ForeignKey, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.constants import AuditEventType, CaseStatus
 from app.database import Base
 
 
@@ -13,7 +14,10 @@ def utc_now_iso8601() -> str:
 class Case(Base):
     __tablename__ = "case"
     __table_args__ = (
-        CheckConstraint("status IN ('open', 'resolved')", name="ck_case_status"),
+        CheckConstraint(
+            f"status IN ('{CaseStatus.OPEN}', '{CaseStatus.RESOLVED}')",
+            name="ck_case_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -35,7 +39,8 @@ class OutcomeAuditEntry(Base):
     __tablename__ = "outcome_audit_entry"
     __table_args__ = (
         CheckConstraint(
-            "event_type IN ('captured', 'corrected')",
+            f"event_type IN ('{AuditEventType.CAPTURED}', "
+            f"'{AuditEventType.CORRECTED}')",
             name="ck_outcome_audit_entry_event_type",
         ),
         Index(

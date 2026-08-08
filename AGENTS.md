@@ -18,6 +18,7 @@ This is a time-boxed GCI dispute-outcome technical assessment. Read this file an
 - Do not invent requirements. If product behavior is ambiguous or documents conflict, stop and report `BLOCKED` with source, section, impact, and the human decision needed.
 - Keep routes/schemas aligned with `docs/06-api-contracts.md` and persistence aligned with `docs/05-data-model.md`. Add tests for important acceptance criteria in `docs/02-srs.md` and `docs/08-test-strategy.md`.
 - Prefer the smallest design. Do not add infrastructure, caching, queues, microservices, or speculative abstractions without a documented requirement or explicit justification.
+- Do not scatter product constants through implementation code. Put backend constants in `backend/app/constants.py`; when frontend code is introduced, put frontend constants in `frontend/lib/constants.ts`. Test fixtures may use explicit values when that makes the behavior under test clear.
 - Report material decisions/tradeoffs for candidate review. Do not fabricate AI-use evidence or revise submission claims to fit code.
 - Never commit secrets, credentials, local `.env` files, databases, or generated build artifacts.
 

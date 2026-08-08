@@ -38,6 +38,10 @@ Key assumptions and decisions:
   roles are a UI-only simulation.
 - Show outcome counts by month, with a clear empty state when no resolved cases exist.
 
+Current implementation evidence: the data layer and backend capture/correct service rules are
+implemented and covered by focused P0 tests. HTTP endpoints and frontend screens remain pending,
+so this draft does not yet claim the end-to-end workflow is complete.
+
 ### 2.2 Non-functional requirements considered
 
 - **Performance:** the bounded 220-row dataset does not justify caching, queues, or scaling work.
@@ -64,6 +68,10 @@ event type, prior/new outcome and note, supplied editor role, and timestamp. `ou
 database CHECK constraint so the historical `maybe` seed value imports unchanged; new API writes
 accept only the three supported outcome values.
 
+The completed service layer captures an open case by resolving it and adding one `captured`
+entry. It corrects a resolved case only when outcome or note differs, adding one `corrected`
+entry with prior/new values; an identical submission adds no audit entry.
+
 ### 3.2 API contract
 
 - `GET /api/cases` lists or single-field-searches cases.
@@ -82,6 +90,12 @@ TypeScript App Router frontend. The browser calls the FastAPI API directly over 
 permits the local frontend origin. The backend is intentionally layered as route handler →
 service → repository → SQLite so the capture/correction and audit rules can be tested without
 HTTP plumbing.
+
+At the current milestone, repositories, outcome services, a minimal Pydantic
+`OutcomeSubmission` validator, and monthly aggregation are implemented. The validation model is
+deliberately present before the HTTP routes solely to prove invalid outcome values are rejected
+before reaching the service; the actual FastAPI routes and error-envelope handling are deferred
+to Milestone 3.
 
 ## 4. Concerns, Tradeoffs, and What I'd Do With More Time
 
@@ -116,15 +130,17 @@ keep, and not claiming unverified work as complete.
 
 ### Specific before/after example
 
-**AI-generated draft:** the early data-model draft treated external `case_id` as the database
-primary key and `user_id` as required.
+**AI-generated draft:** the initial Milestone 2 plan proposed deferring outcome validation until
+Milestone 3 because the documented HTTP API uses Pydantic at its boundary.
 
-**Revised version:** the final specification uses surrogate `Case.id` as the primary key,
-preserves `case_id` as non-unique, and permits a nullable historical `user_id`.
+**Revised version:** I explicitly approved a minimal `OutcomeSubmission` Pydantic model in
+Milestone 2. It validates the three permitted outcome values and note length without adding an
+endpoint or other API-layer behavior.
 
-**Why I changed it:** reviewing the extracted CSV found two `CASE-00213` rows and a blank
-`user_id` on `CASE-00218`. Keeping the initial constraints would have rejected or merged source
-data, conflicting with the requirement to preserve all 220 records as-is.
+**Why I changed it:** Milestone 2's Definition of Done required the P0 proof that an invalid
+outcome is rejected before service logic, while the original milestone split placed Pydantic in
+Milestone 3. The small schema resolved that sequencing bottleneck without prematurely building
+routes, CORS, or HTTP error handling.
 
 Supporting notes and the exact review trail are kept in `ai-usage-log.md`. Before submission, I
 will verify this example accurately describes my own decision process and replace any placeholder

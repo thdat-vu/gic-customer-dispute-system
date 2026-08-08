@@ -1,18 +1,26 @@
 # AI Usage Log
 
-## Candidate 01 — Error handling
+## Candidate 01 — Milestone 2 validation boundary
 
-### AI-generated version
+### AI-generated proposal
 
-```ts
-try {
-  ...
-} catch (error) {
-  return res.status(500).json({
-    error: error.message
-  });
-}
-```
+During planning, Codex identified that `docs/09-implementation-plan.md` asked for every P0 test
+in Milestone 2, while `docs/06-api-contracts.md` placed the Pydantic validation boundary in
+Milestone 3. It proposed blocking rather than silently adding API-layer work early.
+
+### Human-modified direction
+
+I decided that Milestone 2 should contain the smallest Pydantic schema necessary to remove that
+bottleneck: `OutcomeSubmission` validates `won` / `lost` / `fraud_confirmed` and the 1000
+character note limit, but it adds no FastAPI route, CORS configuration, or error handler. The
+service receives only this validated input. The P0 test proves an invalid `maybe` value fails
+while constructing the schema, before a service input exists.
+
+### Reason for change
+
+This preserves the documented validation boundary and lets the milestone meet its stated P0
+Definition of Done without opportunistically implementing the API layer. It also makes the
+milestone split and my intervention concrete rather than claiming AI only generated boilerplate.
 
 ## Candidate 02 — Documentation consistency review
 

@@ -9,14 +9,14 @@ scope.
 
 ## Current position
 
-**Milestone 1 is complete.** The next approved implementation work is **Milestone 2 — Backend
-core business logic**.
+**Milestone 2 is complete.** The next approved implementation work is **Milestone 3 — Backend
+API layer**.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
 | 0 — Repo scaffold | Complete | `0b74daf feat: init base project`; `backend/` FastAPI scaffold and `frontend/` Next.js App Router scaffold | Backend and frontend development servers were verified during setup. |
 | 1 — Backend data layer | Complete | `e0fb8f3 feat: add backend data layer`; `backend/app/models/`, `backend/app/seed.py`, `backend/tests/test_seed.py` | Seed command created 220 SQLite records; query confirmed 220 total, two `CASE-00213` rows, and one NULL `user_id`; pytest passed 2/2. |
-| 2 — Backend core business logic | Not started | No `services/` implementation or capture/correct tests yet | Pending FR-4/FR-5 logic and P0 business-rule tests. |
+| 2 — Backend core business logic | Complete | Current working-tree evidence: `backend/app/services/`, `backend/app/repositories/`, `backend/app/schemas/outcome.py`, and focused P0 tests | Capture/correct/no-op, validation-boundary, seed, CSV parsing, and monthly resolved-trend P0 tests pass (7/7). Commit pending. |
 | 3 — Backend API layer | Not started | No API routers, schemas, error envelope, CORS, or integration tests yet | Pending all five documented endpoints and P1 API tests. |
 | 4 — Frontend list/search + case detail | Not started | No product UI implementation yet | Pending FR-1/FR-2/FR-3/FR-8 end-to-end against the backend. |
 | 5 — Frontend outcome + history | Not started | No outcome form or history UI yet | Pending capture/correct and Manager-only history flow. |
@@ -48,6 +48,24 @@ core business logic**.
   git diff --check                         # passed
   ```
 
+### Milestone 2 — Backend core business logic
+
+- `record_outcome` uses the case's current `status` to capture an open case or correct a
+  resolved one. The write and its append-only audit entry commit together.
+- Corrections retain previous/new outcome and note values. Identical resolved-case submissions
+  return unchanged without an audit entry.
+- `OutcomeSubmission` is the minimal Pydantic validation boundary approved for this milestone:
+  it accepts only `won`, `lost`, or `fraud_confirmed`, caps notes at 1000 characters, and leaves
+  `editor_role` as an unvalidated required string. It adds no HTTP route.
+- `monthly_resolved_outcome_counts` counts only resolved records in `created_at` month buckets.
+- Validation recorded at implementation time:
+
+  ```text
+  cd backend && uv run pytest tests/test_outcome_service.py tests/test_trend_service.py  # 5 passed
+  cd backend && uv run pytest                                                            # 7 passed
+  git diff --check                                                                       # passed
+  ```
+
 ## Supporting preparation (not an implementation milestone)
 
 - Specification and architecture documents were added in `204c7ef docs: add documents [DatVT]`.
@@ -59,9 +77,8 @@ core business logic**.
 
 ## Next work boundary
 
-Start only Milestone 2. Implement the capture/correct service rules and their P0 tests without
-adding API routes or frontend features. Re-run this tracker after the milestone's Definition of
-Done is demonstrably met.
+Start only Milestone 3. Add thin FastAPI routes, the documented shared error envelope, CORS, and
+P1 integration tests over the completed services. Do not start frontend work yet.
 
 ## Update rules
 
