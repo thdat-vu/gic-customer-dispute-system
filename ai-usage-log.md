@@ -57,6 +57,30 @@ The visual source of truth was already `DESIGN.md` plus the three reference imag
 would not unlock required product behavior for this milestone. Using copied local components kept
 the UI implementation inspectable and avoided another moving part during the time-boxed task.
 
+## Candidate 06 — Milestone 5 shared outcome editor
+
+### AI-generated implementation option
+
+Codex identified two reasonable frontend structures for capture and correction: separate forms
+for open and resolved cases, or one form whose copy and initial values reflect the current case
+status.
+
+### Direction retained for review
+
+I retained the documented shared-component direction. `OutcomeEditor` pre-fills a resolved
+case, shows a correction notice, and sends both cases to the same documented POST endpoint. The
+backend remains responsible for deciding whether the write is a capture, correction, or no-op.
+The Manager view deliberately does not render that component and fetches history only after the
+local UI role changes to Manager.
+
+### Reason for change
+
+The shared form keeps the two flows visibly consistent while avoiding duplicated client-side
+write logic. More importantly, it preserves the API contract: the client does not invent a
+capture/correction flag or enforce authorization that the assignment explicitly leaves UI-only.
+Before final submission, I should verify that this entry accurately reflects my own review of
+the generated implementation rather than presenting it as a human-authored change.
+
 ## Candidate 02 — Documentation consistency review
 
 ### AI-assisted finding

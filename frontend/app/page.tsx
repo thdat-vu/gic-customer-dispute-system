@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getCases, type CaseListItem } from "@/lib/api"
+import { getCases, type CaseDetail, type CaseListItem } from "@/lib/api"
 import { CaseStatus, OutcomeValue, Role, SearchField, UiText } from "@/lib/constants"
 
 function formatAmount(amount: number, currency: string): string {
@@ -146,6 +146,18 @@ export default function Home() {
     setLoading(true)
     setError(null)
     setSubmittedSearch({ field: searchField, term: searchTerm.trim() })
+  }
+
+  function handleCaseUpdated(updatedCase: CaseDetail) {
+    setCases((currentCases) => currentCases.map((caseItem) => (
+      caseItem.id === updatedCase.id
+        ? {
+            ...caseItem,
+            outcome: updatedCase.outcome,
+            status: updatedCase.status,
+          }
+        : caseItem
+    )))
   }
 
   const isSearching = submittedSearch.term.length > 0
@@ -326,7 +338,9 @@ export default function Home() {
         <CaseDetailSheet
           caseId={selectedCaseId}
           key={selectedCaseId}
+          onCaseUpdated={handleCaseUpdated}
           onOpenChange={(open) => !open && setSelectedCaseId(null)}
+          role={role}
         />
       )}
     </main>

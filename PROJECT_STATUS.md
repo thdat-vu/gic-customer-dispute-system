@@ -9,8 +9,8 @@ scope.
 
 ## Current position
 
-**Milestone 4 is complete.** The next approved implementation work is **Milestone 5 — Frontend
-capture/correct outcome + history**.
+**Milestone 5 is complete.** The next approved implementation work is **Milestone 6 — Frontend
+trend view**.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
@@ -18,8 +18,8 @@ capture/correct outcome + history**.
 | 1 — Backend data layer | Complete | `e0fb8f3 feat: add backend data layer`; `backend/app/models/`, `backend/app/seed.py`, `backend/tests/test_seed.py` | Seed command created 220 SQLite records; query confirmed 220 total, two `CASE-00213` rows, and one NULL `user_id`; pytest passed 2/2. |
 | 2 — Backend core business logic | Complete | `62adc70 feat: add outcome business logic` | Capture/correct/no-op, validation-boundary, seed, CSV parsing, and monthly resolved-trend P0 tests passed (7/7). |
 | 3 — Backend API layer | Complete | `83c8551 feat: add dispute API endpoints` | Five documented routes appear in OpenAPI; shared errors/CORS work; P1 integration tests pass. |
-| 4 — Frontend list/search + case detail | Complete | Current working-tree evidence: `frontend/app/page.tsx`, `frontend/components/case-detail-sheet.tsx`, `frontend/lib/api.ts`, and shadcn components | Browse/search, read-only detail, loading/empty/error states, and UI-only role switcher run against the real API; lint/build pass. Commit pending. |
-| 5 — Frontend outcome + history | Not started | No outcome form or history UI yet | Pending capture/correct and Manager-only history flow. |
+| 4 — Frontend list/search + case detail | Complete | `c69b49d feat: add case management interface` | Browse/search, read-only detail, loading/empty/error states, and UI-only role switcher run against the real API; lint/build passed. |
+| 5 — Frontend outcome + history | Complete | Current working-tree evidence: `frontend/components/case-detail-sheet.tsx`, `frontend/lib/api.ts`, `frontend/lib/constants.ts`, `frontend/components/ui/textarea.tsx` | Analyst capture/correction calls the real API with client validation; Manager-only history is fetched/rendered and role switch changes the affordance without reload. Commit pending. |
 | 6 — Frontend trend view | Not started | No trend UI or aggregation display yet | Pending monthly trend view and empty state. |
 | 7 — README + polish | Not started | README has current local run, seed, and test instructions, but the final handoff audit has not occurred | Pending complete implemented/skipped scope, architecture explanation, and clean-checkout verification. |
 
@@ -105,6 +105,28 @@ capture/correct outcome + history**.
   git diff --check              # passed
   ```
 
+### Milestone 5 — Frontend capture/correct outcome + history
+
+- The shared `OutcomeEditor` is rendered only for the local Analyst role. It uses the same
+  `POST /api/cases/{id}/outcome` request for both open-case capture and resolved-case
+  correction; the API continues to determine the action from the current case status.
+- Client validation blocks a missing outcome and applies the documented 1000-character maximum
+  to the optional note. A successful response replaces the detail state and synchronizes the
+  selected row's status/outcome in the list.
+- Manager renders a History section only. It fetches `GET /api/cases/{id}/history` only when
+  that role is active, then displays most-recent-first event type, timestamp, prior/new outcome,
+  prior/new note, and editor role. A case without entries has an explicit empty state.
+- Changing the existing UI-only role selector immediately swaps the editor and history section;
+  no server-side authorization was introduced.
+- Validation recorded at implementation time:
+
+  ```text
+  cd frontend && npm run lint                 # passed
+  cd frontend && npm run build                # passed
+  cd backend && uv run pytest tests/test_api.py  # 9 passed (one upstream deprecation warning)
+  git diff --check                            # passed
+  ```
+
 ## Supporting preparation (not an implementation milestone)
 
 - Specification and architecture documents were added in `204c7ef docs: add documents [DatVT]`.
@@ -116,9 +138,8 @@ capture/correct outcome + history**.
 
 ## Next work boundary
 
-Start only Milestone 5. Add the shared outcome form and client validation for Analyst view, then
-render Manager-only history from the real API. Preserve the existing local role state and do not
-start trend UI yet.
+Start only Milestone 6. Add the documented read-only trend view using the existing API; preserve
+the existing local role state and do not start README/polish or stretch work yet.
 
 ## Update rules
 

@@ -5,6 +5,8 @@ export class ApiConfig {
 export class ApiPath {
   static readonly CASES = "/cases"
   static readonly CASE_DETAIL = "/cases/{caseId}"
+  static readonly CASE_OUTCOME = "/cases/{caseId}/outcome"
+  static readonly CASE_HISTORY = "/cases/{caseId}/history"
 }
 
 export class Role {
@@ -29,6 +31,10 @@ export class OutcomeValue {
   static readonly FRAUD_CONFIRMED = "fraud_confirmed"
 }
 
+export class ValidationLimit {
+  static readonly OUTCOME_NOTE_LENGTH = 1000
+}
+
 export class UiText {
   static readonly PRODUCT_NAME = "Dispute Ops"
   static readonly CASES = "Cases"
@@ -37,4 +43,7 @@ export class UiText {
   static readonly MANAGER = "Manager"
   static readonly UNRECORDED_OUTCOME = "Unrecorded"
   static readonly API_ERROR = "Something went wrong. Please try again."
+  static readonly OUTCOME_REQUIRED = "Choose an outcome before saving."
+  static readonly SAVE_OUTCOME = "Save outcome"
+  static readonly OUTCOME_SAVED = "Outcome saved."
 }

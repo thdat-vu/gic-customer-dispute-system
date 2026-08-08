@@ -40,9 +40,8 @@ Key assumptions and decisions:
 
 Current implementation evidence: the data layer, backend capture/correct service rules, and all
 five documented HTTP endpoints are implemented and covered by focused P0/P1 tests. The Cases
-list/search and read-only detail flow now call the real API; outcome editing, audit-history UI,
-and trends UI remain pending, so this draft does not yet claim the end-to-end workflow is
-complete.
+list/search, detail, Analyst capture/correction, and Manager-only audit-history UI call the real
+API. Trend UI remains pending, so this draft does not yet claim the full workflow is complete.
 
 ### 2.2 Non-functional requirements considered
 
@@ -106,10 +105,12 @@ before reaching the service. Milestone 3 adds the thin FastAPI routes, shared ex
 CORS middleware, and contract-aligned OpenAPI response schemas.
 
 The frontend currently implements a desktop-first Cases workspace: a dense list, selected-field
-search, loading/empty/error states, a right-side read-only detail sheet, and a local
-Analyst/Manager role switcher. It uses the case surrogate ID for detail lookup and deliberately
-shows full supplied PII in the detail sheet. Outcome editor, history, and trends are deferred to
-their dedicated milestones.
+search, loading/empty/error states, a right-side detail sheet, and a local Analyst/Manager role
+switcher. It uses the case surrogate ID for detail lookup and deliberately shows full supplied
+PII in the detail sheet. The shared Analyst outcome editor performs client-side required-outcome
+validation and sends both captures and corrections to the same API endpoint. When the role is
+Manager, that editor is replaced by a history view sourced from the API; no server-side
+authorization is implied. Trends remain deferred to their dedicated milestone.
 
 ## 4. Concerns, Tradeoffs, and What I'd Do With More Time
 
