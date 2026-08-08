@@ -22,6 +22,8 @@ Key assumptions and decisions:
   permissive at rest and validates new outcome writes at the application boundary.
 - The 220 source rows are retained as 220 distinct records. A surrogate `id` identifies records;
   `case_id` remains a non-unique display field because one source ID is duplicated.
+- Known source-data canaries are surfaced as a read-only data-quality indicator. It is separate
+  from the `open`/`resolved` workflow status and never cleans or rejects a historical row.
 
 ## 2. Requirements Analysis
 
@@ -55,7 +57,9 @@ and explicitly handles the zero-resolved-case state.
 - **Maintainability:** business rules live in a service layer and are covered first by focused
   domain tests.
 - **Data quality:** the CSV is parsed with an RFC4180-aware parser and UTF-8; duplicate external
-  case IDs and a blank historical user ID are retained rather than silently “fixed.”
+  case IDs and a blank historical user ID are retained rather than silently “fixed.” List/detail
+  responses expose stable diagnostic reasons for the six documented anomaly classes so they are
+  visible to an analyst without changing the underlying record.
 
 ## 3. Design
 
@@ -119,6 +123,11 @@ authorization is implied. The read-only Trends workspace is available to both ro
 existing aggregation endpoint, and renders loading, API-error, zero-data, and outcome-breakdown
 states. It uses a compact table rather than a chart to keep the take-home implementation small
 while showing the complete required counts.
+
+For historical canaries, the list shows a compact amber `Data issue` badge and the detail sheet
+explains the derived reason codes. An optional Data issues-only filter runs before pagination.
+This read-time diagnostic does not create a new database column, modify seed values, or act as a
+third workflow status.
 
 ## 4. Concerns, Tradeoffs, and What I'd Do With More Time
 

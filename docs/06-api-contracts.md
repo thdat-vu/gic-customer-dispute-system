@@ -31,9 +31,11 @@ List/search cases. Traces to FR-1, FR-2.
 | `end_month` | no | inclusive upper `created_at` month, formatted `YYYY-MM`; must not precede `start_month` |
 | `status` | no | exact enum: `open` or `resolved` |
 | `region` | no | exact case-insensitive region value, e.g. `APAC-JP` |
+| `has_data_quality_issue` | no | boolean; `true` returns only records with one or more FR-10 diagnostic codes, `false` returns only records without one |
 
 Search, exact status/region filters, and optional month bounds are applied before the documented
-newest-first sort and then pagination. `total` remains the number of matches before pagination.
+newest-first sort and then pagination. When supplied, `has_data_quality_issue` is also applied
+before pagination. `total` remains the number of matches before pagination.
 Supplying only one month bound is valid (open-ended range); omitting both leaves the date range
 unfiltered. The frontend UI initializes from January of the current UTC year through the current
 UTC month, but this API does not impose that default on callers that omit the bounds.
@@ -53,7 +55,9 @@ UTC month, but this API does not impose that default on callers that omit the bo
       "created_at": "2026-04-05T18:35:00Z",
       "region": "APAC-VN",
       "status": "open",
-      "outcome": null
+      "outcome": null,
+      "has_data_quality_issue": false,
+      "data_quality_issues": []
     }
   ],
   "total": 220
@@ -63,6 +67,10 @@ UTC month, but this API does not impose that default on callers that omit the bo
 endpoint) to keep the list payload light. `id` (surrogate) is the field the frontend uses to
 navigate to a case's detail view — `case_id` is display-only and may repeat across items (see
 `CASE-00213`).
+
+`has_data_quality_issue` and `data_quality_issues` are read-only FR-10 diagnostics. Reason codes
+are `case_id_duplicate`, `missing_user_id`, `negative_amount`, `future_created_at`,
+`invalid_outcome`, and `status_outcome_mismatch`; the array is empty when the flag is false.
 
 **Error `422`**: `search_field` provided without `q` (or vice versa), invalid pagination value,
 malformed month, or `start_month` after `end_month` — uses the shared error envelope (§6).
@@ -87,7 +95,9 @@ Case detail. Traces to FR-3. `{id}` is the surrogate integer key, **not** `case_
   "region": "APAC-VN",
   "status": "resolved",
   "outcome": "won",
-  "outcome_note": "Customer provided proof of delivery."
+  "outcome_note": "Customer provided proof of delivery.",
+  "has_data_quality_issue": false,
+  "data_quality_issues": []
 }
 ```
 

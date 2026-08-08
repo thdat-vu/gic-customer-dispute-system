@@ -1,6 +1,6 @@
 # Project Status
 
-Last reviewed: 2026-08-08  
+Last reviewed: 2026-08-09
 Plan tracked: [`docs/09-implementation-plan.md`](docs/09-implementation-plan.md)
 
 This file is a factual delivery tracker. It records completed work only when there is code,
@@ -9,8 +9,9 @@ scope.
 
 ## Current position
 
-**All core implementation milestones (0–7) are complete.** Approved stretch items Pagination
-and list email masking are complete; only `resolved_at`/alternate trend axis remains deferred.
+**All core implementation milestones (0–7) are complete.** Approved pagination, list-email
+masking, and read-only historical data-quality visibility are complete; only
+`resolved_at`/alternate trend axis remains deferred.
 
 | Milestone | Status | Evidence | Definition of Done status |
 |---|---|---|---|
@@ -21,8 +22,9 @@ and list email masking are complete; only `resolved_at`/alternate trend axis rem
 | 4 — Frontend list/search + case detail | Complete | `c69b49d feat: add case management interface` | Browse/search, read-only detail, loading/empty/error states, and UI-only role switcher run against the real API; lint/build passed. |
 | 5 — Frontend outcome + history | Complete | `fbefce6 feat: add outcome management interface` | Analyst capture/correction calls the real API with client validation; Manager-only history is fetched/rendered and role switch changes the affordance without reload. |
 | 6 — Frontend trend view | Complete | `4ebc05e feat: add outcome trend view` | Both roles can open Month/Region grouping, see outcome counts or explicit loading/error/empty states; local SQLite/API spot-check matches the visible monthly values. |
-| 7 — README + polish | Complete | Current working-tree evidence: `README.md`, `PROJECT_STATUS.md`, `submission-draft.md`, `ai-usage-log.md` | README contains verified local install/run/test commands, architecture, implemented/deferred scope, and API summary. Install, lint, backend tests, and webpack compile passed; default Turbopack build is blocked by this sandbox's IPC-port policy. Commit pending. |
-| Stretch — list refinement | Complete | Current working-tree evidence: backend list route/service/repository/tests and `frontend/app/page.tsx` | One-based 20-row pagination with numeric controls; January-to-current-month default bounds; exact status/region filters; Reset; and masked list email. Commit pending. |
+| 7 — README + polish | Complete | `a74bdbe feat: add paginated case filters` | README contains verified local install/run/test commands, architecture, implemented/deferred scope, and API summary. Install, lint, backend tests, and webpack compile passed; default Turbopack build is blocked by this sandbox's IPC-port policy. |
+| Stretch — list refinement | Complete | `a74bdbe feat: add paginated case filters` | One-based 20-row pagination with numeric controls; January-to-current-month default bounds; exact status/region filters; Reset; and masked list email. |
+| Post-core — data-quality indicator | Complete | Current working-tree evidence: response schemas, list/detail UI, and `backend/tests/test_api.py` | List/detail return read-only diagnostic issue codes; the Data issues-only filter applies before pagination. No source record is cleaned and business `status` stays `open`/`resolved`. Commit pending. |
 
 ## Completed implementation evidence
 
@@ -194,10 +196,29 @@ and list email masking are complete; only `resolved_at`/alternate trend axis rem
 - Validation recorded at implementation time:
 
   ```text
-  cd backend && uv run pytest                 # 21 passed (one upstream deprecation warning)
+  cd backend && uv run pytest                 # 22 passed (one upstream deprecation warning)
   cd frontend && npm run lint                 # passed
   cd frontend && npm run build -- --webpack   # passed
   sqlite3 backend/data/app.db <count query>   # 220 records; CASE-00213 count = 2
+  git diff --check                            # passed
+  ```
+
+### Post-core — historical data-quality indicator
+
+- `GET /api/cases` and `GET /api/cases/{id}` now expose `has_data_quality_issue` and stable
+  `data_quality_issues` codes. The diagnostic is computed at read time, including a grouped
+  duplicate-`case_id` lookup, and is not persisted as a new column or workflow state.
+- The Cases table adds an amber `Data issue` badge; the case sheet lists human-readable reasons
+  while explicitly saying the outcome workflow remains unchanged. An All data / Data issues only
+  selector sends the optional diagnostic query parameter and resets with the other list filters.
+- The API integration test covers duplicate IDs, missing user ID, negative amount, future date,
+  invalid outcome, and status/outcome mismatch while asserting that the case status is unchanged.
+- Validation recorded for this refinement:
+
+  ```text
+  cd backend && uv run pytest                 # 24 passed (one upstream deprecation warning)
+  cd frontend && npm run lint                 # passed
+  cd frontend && npm run build -- --webpack   # passed
   git diff --check                            # passed
   ```
 
@@ -212,9 +233,9 @@ and list email masking are complete; only `resolved_at`/alternate trend axis rem
 
 ## Next work boundary
 
-Core implementation and the approved two stretch items are complete. Do not start the remaining
-`resolved_at` stretch automatically; next use `submission-audit` and complete the external
-submission document/video links.
+Core implementation and the approved post-core refinements are complete. Do not start the
+remaining `resolved_at` stretch automatically; next use `submission-audit` and complete the
+external submission document/video links.
 
 ## Update rules
 

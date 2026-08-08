@@ -80,6 +80,11 @@ numbers, a default/maximum 20-row page, optional inclusive `created_at` month bo
 list email. Exact `region` and `status` filters plus Reset/direct-page UI were added in the same
 post-core list refinement. Item 3 remains unstarted.
 
+**Post-core refinement:** a read-only FR-10 data-quality indicator was approved after visual
+review. It flags documented historical canaries in list/detail without cleaning source data or
+adding a workflow status. Its approved Data issues-only list filter is applied before pagination;
+both are separate from the deferred `resolved_at` work.
+
 **Do not start stretch work with less than ~2h remaining before your own personal deadline for
 writing the doc + recording the video** — an unfinished stretch feature reads worse than a
 clean core submission with an honest "didn't get to X" note in Concerns & Tradeoffs.

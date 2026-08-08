@@ -10,6 +10,15 @@ class OutcomeValue:
     ALL = (WON, LOST, FRAUD_CONFIRMED)
 
 
+class DataQualityIssue:
+    CASE_ID_DUPLICATE = "case_id_duplicate"
+    FUTURE_CREATED_AT = "future_created_at"
+    INVALID_OUTCOME = "invalid_outcome"
+    MISSING_USER_ID = "missing_user_id"
+    NEGATIVE_AMOUNT = "negative_amount"
+    STATUS_OUTCOME_MISMATCH = "status_outcome_mismatch"
+
+
 class AuditEventType:
     CAPTURED = "captured"
     CORRECTED = "corrected"

@@ -36,6 +36,7 @@ clicking around the UI — exactly what a reviewer is likely checking for.
 | List display masks email without changing the unmasked `email` search request or case-detail value | Approved P2 PII-display decision |
 | Month-range form blocks `start_month > end_month` before requesting the API; backend retains matching 422 coverage | Approved P2 date-range validation decision |
 | `GET /cases` combines exact case-insensitive region and enum status filters before pagination | Approved P2 list-filter decision |
+| List/detail responses flag each approved historical data-quality check without changing business `status`; `has_data_quality_issue=true` filters before pagination | FR-10, BR-8 |
 
 ## 3. Priority P2 — frontend tests (only if time remains)
 

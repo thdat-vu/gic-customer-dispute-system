@@ -71,6 +71,9 @@ is the documented local FastAPI URL.
   supplied values.
 - View full case detail using the surrogate record `id`; duplicate display `case_id` values are
   preserved from the supplied data.
+- Flag known historical source anomalies with a separate read-only Data issue badge and detail
+  explanation. The `Data issues only` filter applies before pagination. It does not clean data or
+  add a third case workflow status.
 - Analyst outcome capture and correction using `won`, `lost`, or `fraud_confirmed`, with an
   optional note (up to 1000 characters). A no-op correction creates no audit noise.
 - UI-only Acting-as switcher: Analyst sees outcome editing; Manager sees read-only history.

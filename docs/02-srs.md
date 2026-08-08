@@ -155,6 +155,22 @@ found two additional anomalies the original pass missed — see `00-problem-stat
 3. **`user_id` is nullable.** `CASE-00218` has a blank `user_id` in the source CSV; the column
    constraint must permit this rather than reject or fabricate a value for that row.
 
+### FR-10 — Historical data-quality indicator
+
+**Given** a case has one or more documented source-data anomalies, **when** it is returned by
+the list or detail API, **then** it includes a read-only `has_data_quality_issue` flag and stable
+`data_quality_issues` reason codes. The UI renders a visible “Data issue” indicator in the list
+and lists the reasons in detail. This diagnostic is derived on read; it never changes the
+`open`/`resolved` workflow status, rejects a historical row, or mutates source data.
+
+The known checks are duplicate external `case_id`, missing `user_id`, negative amount, future
+`created_at`, invalid historical outcome, and status/outcome mismatch.
+
+**Given** an analyst selects the Data issues-only list filter, **when** cases are listed, **then**
+only records with `has_data_quality_issue=true` are included before pagination.
+
+*Traces to:* BR-8, §00.9.
+
 ---
 
 ## 4. Non-Functional Requirements

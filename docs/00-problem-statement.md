@@ -101,6 +101,7 @@ the capture flow.
 | BR-5 | Search/filter scope | Minimum viable: search by **one** of user_id / device_id / email, satisfying the brief's "at least one" requirement, no more | Chosen to protect time budget |
 | BR-6 | Trend view time basis | Grouped by `created_at` (case-opened date), monthly buckets | Simplicity + uses existing seed field; **known limitation**: a case opened in January but resolved in May will show in January's bucket, which may misrepresent "when the outcome actually happened." Documented as an accepted limitation, not silently ignored. |
 | BR-7 | Malformed/edge-case seed rows (see §9) | Out of scope to clean or specially handle; imported as-is | You explicitly prioritized speed and stayed within "engineer analyzes and flags fraud, not general data hygiene" framing |
+| BR-8 | Historical data-quality visibility | Show a read-only, derived warning for the documented canaries; do not add a third case workflow status or alter source values | Approved post-core so analysts can recognize known source issues without silently cleaning them |
 
 ## 9. Known data quality anomalies in the seed dataset
 

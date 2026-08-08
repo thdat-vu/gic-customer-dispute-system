@@ -1,7 +1,7 @@
 "use client"
 
 import { type FormEvent, type ReactNode, useEffect, useState } from "react"
-import { AlertCircle, CheckCircle2, ClipboardList, History } from "lucide-react"
+import { AlertCircle, CheckCircle2, ClipboardList, History, TriangleAlert } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,8 @@ import {
 } from "@/lib/api"
 import {
   CaseStatus,
+  DataQualityIssue,
+  DataQualityIssueLabel,
   OutcomeValue,
   Role,
   UiText,
@@ -72,6 +74,18 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+function dataQualityIssueLabel(issue: string): string {
+  const labels: Record<string, string> = {
+    [DataQualityIssue.CASE_ID_DUPLICATE]: DataQualityIssueLabel.CASE_ID_DUPLICATE,
+    [DataQualityIssue.FUTURE_CREATED_AT]: DataQualityIssueLabel.FUTURE_CREATED_AT,
+    [DataQualityIssue.INVALID_OUTCOME]: DataQualityIssueLabel.INVALID_OUTCOME,
+    [DataQualityIssue.MISSING_USER_ID]: DataQualityIssueLabel.MISSING_USER_ID,
+    [DataQualityIssue.NEGATIVE_AMOUNT]: DataQualityIssueLabel.NEGATIVE_AMOUNT,
+    [DataQualityIssue.STATUS_OUTCOME_MISMATCH]: DataQualityIssueLabel.STATUS_OUTCOME_MISMATCH,
+  }
+  return labels[issue] ?? issue
+}
+
 function DetailContent({ caseDetail }: { caseDetail: CaseDetail }) {
   const fields: Array<{ label: string; value: ReactNode; fullWidth?: boolean }> = [
     { label: "Created", value: formatDate(caseDetail.created_at) },
@@ -97,6 +111,22 @@ function DetailContent({ caseDetail }: { caseDetail: CaseDetail }) {
           ))}
         </dl>
       </section>
+      {caseDetail.has_data_quality_issue && (
+        <section className="rounded-sm border border-amber-200 bg-amber-50 p-3" aria-label="Data quality issue">
+          <div className="flex items-center gap-2 text-sm font-medium text-amber-900">
+            <TriangleAlert className="size-4" />
+            {UiText.DATA_QUALITY_NEEDS_REVIEW}
+          </div>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-900">
+            {caseDetail.data_quality_issues.map((issue) => (
+              <li key={issue}>{dataQualityIssueLabel(issue)}</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-amber-800">
+            {UiText.DATA_QUALITY_PRESERVES_SOURCE}
+          </p>
+        </section>
+      )}
       <Separator />
       <section>
         <p className="mb-3 text-[11px] font-semibold tracking-[0.08em] text-slate-500 uppercase">

@@ -65,6 +65,21 @@ def list_cases(
     )
 
 
+def list_filtered_cases(
+    session: Session,
+    search_field: str | None = None,
+    query: str | None = None,
+    region: str | None = None,
+    status: str | None = None,
+    start_month: str | None = None,
+    end_month: str | None = None,
+) -> list[Case]:
+    statement = filtered_cases_statement(
+        search_field, query, region, status, start_month, end_month
+    )
+    return list(session.scalars(statement.order_by(Case.created_at.desc())))
+
+
 def count_cases(
     session: Session,
     search_field: str | None = None,
@@ -79,6 +94,15 @@ def count_cases(
     )
     count_statement = select(func.count()).select_from(statement.subquery())
     return session.scalar(count_statement) or 0
+
+
+def duplicate_case_ids(session: Session) -> set[str]:
+    statement = (
+        select(Case.case_id)
+        .group_by(Case.case_id)
+        .having(func.count(Case.id) > 1)
+    )
+    return set(session.scalars(statement))
 
 
 def list_audit_entries(session: Session, case_ref_id: int) -> list[OutcomeAuditEntry]:

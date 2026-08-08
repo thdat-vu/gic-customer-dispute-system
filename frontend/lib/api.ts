@@ -12,6 +12,8 @@ export type CaseListItem = {
   region: string
   status: string
   outcome: string | null
+  has_data_quality_issue: boolean
+  data_quality_issues: string[]
 }
 
 export type CaseDetail = CaseListItem & {
@@ -47,6 +49,7 @@ export type CaseListResponse = {
 }
 
 export type CaseListQuery = {
+  hasDataQualityIssue?: boolean
   endMonth?: string
   page?: number
   region?: string
@@ -86,6 +89,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function getCases({
+  hasDataQualityIssue,
   endMonth,
   page,
   region,
@@ -113,6 +117,9 @@ export async function getCases({
   }
   if (status) {
     parameters.set("status", status)
+  }
+  if (hasDataQualityIssue !== undefined) {
+    parameters.set("has_data_quality_issue", String(hasDataQualityIssue))
   }
   const query = parameters.size > 0 ? `?${parameters.toString()}` : ""
   return request<CaseListResponse>(`${ApiPath.CASES}${query}`)

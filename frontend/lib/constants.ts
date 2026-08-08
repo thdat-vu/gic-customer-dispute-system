@@ -38,6 +38,7 @@ export class DateFormat {
 
 export class CaseFilter {
   static readonly ALL = "all"
+  static readonly DATA_QUALITY_ISSUES = "data_quality_issues"
 }
 
 export class CaseStatus {
@@ -49,6 +50,24 @@ export class OutcomeValue {
   static readonly WON = "won"
   static readonly LOST = "lost"
   static readonly FRAUD_CONFIRMED = "fraud_confirmed"
+}
+
+export class DataQualityIssue {
+  static readonly CASE_ID_DUPLICATE = "case_id_duplicate"
+  static readonly FUTURE_CREATED_AT = "future_created_at"
+  static readonly INVALID_OUTCOME = "invalid_outcome"
+  static readonly MISSING_USER_ID = "missing_user_id"
+  static readonly NEGATIVE_AMOUNT = "negative_amount"
+  static readonly STATUS_OUTCOME_MISMATCH = "status_outcome_mismatch"
+}
+
+export class DataQualityIssueLabel {
+  static readonly CASE_ID_DUPLICATE = "Duplicate external case ID"
+  static readonly FUTURE_CREATED_AT = "Future created date"
+  static readonly INVALID_OUTCOME = "Invalid historical outcome"
+  static readonly MISSING_USER_ID = "Missing user ID"
+  static readonly NEGATIVE_AMOUNT = "Negative amount"
+  static readonly STATUS_OUTCOME_MISMATCH = "Status and outcome do not match"
 }
 
 export class TrendGroup {
@@ -72,4 +91,10 @@ export class UiText {
   static readonly MONTH_RANGE_INVALID = "Start month must not be after end month."
   static readonly SAVE_OUTCOME = "Save outcome"
   static readonly OUTCOME_SAVED = "Outcome saved."
+  static readonly DATA_QUALITY = "Data quality"
+  static readonly DATA_QUALITY_ISSUE = "Data issue"
+  static readonly DATA_QUALITY_NEEDS_REVIEW = "Needs review"
+  static readonly DATA_QUALITY_PRESERVES_SOURCE = "This indicator preserves the source record and does not change its outcome workflow."
+  static readonly ALL_DATA = "All data"
+  static readonly DATA_QUALITY_ISSUES_ONLY = "Data issues only"
 }

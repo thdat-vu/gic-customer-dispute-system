@@ -29,6 +29,10 @@ SQLAlchemy models in `backend/app/models/`.
 | `outcome` | TEXT | NULLABLE, **no CHECK constraint** | Deliberately unconstrained at DB level per FR-9/INV-2, to tolerate seed row `CASE-00215` (`outcome=maybe`). Enum validity (`won`/`lost`/`fraud_confirmed`) enforced only in `services/` for new writes via FR-4/FR-5. |
 | `outcome_note` | TEXT | NULLABLE | assumed soft cap of 1000 characters enforced at the Pydantic schema layer (not DB-level) — flag if you want a different limit |
 
+`has_data_quality_issue` and `data_quality_issues` are deliberately absent from the SQLite
+table: FR-10 derives them at read time from source values and duplicate `case_id` detection. A
+diagnostic must not mutate the source record or become a third `status` value.
+
 ## 2. Table: `outcome_audit_entry`
 
 | Column | Type | Constraints | Notes |

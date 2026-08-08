@@ -21,6 +21,7 @@ repo/
 │   │   ├── api/               # route handlers (thin — validate input, call services, shape response)
 │   │   ├── schemas/           # Pydantic request/response models (this doubles as the OpenAPI/Swagger source)
 │   │   ├── services/          # business/domain logic: capture/correct outcome rules, audit-on-change-only logic
+│   │   ├── data_quality.py    # pure read-time diagnostic rules shared by list filtering and response shaping
 │   │   ├── repositories/      # data access layer (SQL queries), isolated so services stay storage-agnostic
 │   │   ├── models/            # SQLAlchemy table definitions
 │   │   └── seed.py            # one-off script to load seed_dataset.csv into SQLite
@@ -56,7 +57,8 @@ HTTP request
 api/ (route handlers)        — parse/validate request via Pydantic schemas, call services, map errors to HTTP status
    │
    ▼
-services/ (domain logic)     — enforces INV-1..INV-5, FR-4/FR-5 capture-vs-correct + no-op audit rule, FR-7 aggregation
+services/ (domain logic)     — enforces INV-1..INV-5, FR-4/FR-5 capture-vs-correct + no-op audit rule, FR-7 aggregation,
+                               and optional FR-10 diagnostic filtering before pagination
    │
    ▼
 repositories/ (data access)  — SQL via SQLAlchemy, no business logic here
@@ -65,20 +67,43 @@ repositories/ (data access)  — SQL via SQLAlchemy, no business logic here
 SQLite file (backend/data/app.db)
 ```
 
+### 2.1 Historical data-quality read flow
+
+`app/data_quality.py` is a pure read-time rule module shared by response shaping and the
+optional list filter. It evaluates the documented canaries from existing record values plus the
+repository's grouped duplicate-`case_id` lookup. It returns reason codes; it does not write to
+SQLite or alter a case's business `status`.
+
+```
+GET /api/cases?has_data_quality_issue=true
+   │
+   ▼
+route validates query → service fetches already-search/month/status/region-filtered records
+   │                                              │
+   │                                              └→ repository supplies duplicate case_id set
+   ▼
+data_quality.py derives issue codes → service retains matching records → pagination → response schema
+```
+
+When the diagnostic filter is omitted, the normal repository `limit`/`offset` path is used.
+When it is present, the bounded 220-row candidate set is evaluated first so `total` and pages
+describe the filtered result set. This small in-memory step is intentional for the assessment;
+no generalized query framework or persisted quality state is needed.
+
 **Why this split matters for grading/maintainability (NFR 4.5):** the "audit entry only on
 actual change" rule (FR-5) and "no DB-level outcome enum, API-level only" rule (FR-9) are
 *business* decisions, not framework mechanics — keeping them in `services/` (plain Python,
 testable without spinning up FastAPI or a real HTTP call) is what makes them cheaply testable
 per Phase 8.
 
-### 2.1 API documentation for the coding agent
+### 2.2 API documentation for the coding agent
 FastAPI auto-generates an OpenAPI schema (`/openapi.json`) and Swagger UI (`/docs`) directly
 from the Pydantic schemas and route definitions — **this becomes the machine-readable source of
 truth** for the API contract. `06-api-contracts.md` will contain the human-readable version
 matching it, but the two must stay in sync; the OpenAPI JSON is what an autonomous agent should
 actually parse, not the markdown.
 
-### 2.2 Storage
+### 2.3 Storage
 - SQLite file, per brief's "no real database required."
 - SQLAlchemy ORM for table definitions and queries (readable, testable, avoids raw string SQL
   scattered across the codebase).
@@ -86,7 +111,7 @@ actually parse, not the markdown.
   startup (`Base.metadata.create_all()`), since there's no production deployment or evolving
   schema history to manage in this scope.
 
-### 2.3 Seed loading
+### 2.4 Seed loading
 **Resolved (assumption):** seed loading is an **explicit, separate step** (`python -m
 app.seed` or equivalent CLI command), run once during setup per the README — **not** automatic
 on every backend startup. Rationale: automatic reseeding on every restart risks either
@@ -130,10 +155,14 @@ reach the API" failure mode is easy to lose time to otherwise.
 
 ---
 
-## 5. Open item carried forward
+## 5. Implemented post-core decisions
 
 - **Pagination (implemented post-core):** repositories apply `limit`/`offset` after the shared
   search/month/status/region-filter statement; the API validates one-based `page`, capped
   `limit`, and month bounds; the frontend renders Previous/Next and direct page controls.
   Contract details are in
   `06-api-contracts.md` §1.
+- **Historical data-quality indicator (implemented post-core):** `app/data_quality.py` evaluates
+  documented anomaly rules and duplicate external IDs. It decorates API responses and supports
+  the optional list diagnostic filter before pagination; no database column, migration,
+  case-status value, or data-cleaning write path is introduced.

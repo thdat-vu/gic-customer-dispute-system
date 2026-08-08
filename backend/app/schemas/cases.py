@@ -1,9 +1,10 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.constants import SearchField
-from app.constants import CaseStatus
+from app.constants import CaseStatus, SearchField
+from app.data_quality import case_data_quality_issues
+from app.models import Case
 
 
 SearchFieldValue = Literal[
@@ -29,10 +30,32 @@ class CaseResponse(BaseModel):
     region: str
     status: str
     outcome: str | None
+    has_data_quality_issue: bool = False
+    data_quality_issues: list[str] = Field(default_factory=list)
 
 
 class CaseDetailResponse(CaseResponse):
     outcome_note: str | None
+
+
+def case_response(case: Case, duplicate_ids: set[str]) -> CaseResponse:
+    issues = case_data_quality_issues(case, duplicate_ids)
+    return CaseResponse.model_validate(case).model_copy(
+        update={
+            "has_data_quality_issue": bool(issues),
+            "data_quality_issues": issues,
+        }
+    )
+
+
+def case_detail_response(case: Case, duplicate_ids: set[str]) -> CaseDetailResponse:
+    issues = case_data_quality_issues(case, duplicate_ids)
+    return CaseDetailResponse.model_validate(case).model_copy(
+        update={
+            "has_data_quality_issue": bool(issues),
+            "data_quality_issues": issues,
+        }
+    )
 
 
 class CaseListResponse(BaseModel):

@@ -37,7 +37,7 @@ and Functional Requirements (Phase 4)
 |---|---|
 | Case deletion (soft or hard) | Not requested by the original brief; dropped after review to protect the time budget |
 | Real authentication / authorization | Explicitly excluded by the brief |
-| Data validation/cleanup of the seed dataset's anomalous rows (`CASE-00220`, `CASE-00215`, `CASE-00216`, `CASE-00217`) | Explicitly deprioritized (BR-7); imported as-is |
+| Data validation/cleanup of the seed dataset's anomalous rows | Explicitly deprioritized (BR-7); imported as-is. Read-only visibility of the documented canaries is implemented separately under BR-8/FR-10. |
 | Fraud detection or decision-making logic | Out of the tool's purpose entirely — this tool *records* outcomes, it does not determine them |
 | Bulk edit / bulk import UI beyond the initial seed load | Not requested; time-budget risk |
 | Multiple filters combined (AND/OR search across fields) | Only single-field search required (BR-5) |

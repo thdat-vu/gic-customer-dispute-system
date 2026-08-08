@@ -120,6 +120,11 @@ The color palette is dominated by a neutral scale to maintain a calm, focused en
 - **PII display (post-core stretch):** the list shows `user_id` and `device_id` in full, but
   masks email as first-character + five asterisks + domain. Detail still shows the full supplied
   fields, while search uses unmasked values.
+- **Data-quality indicator (post-core refinement):** use a compact amber outlined “Data issue”
+  badge in the list. In case detail, show an amber callout with the supplied reason codes. It is
+  diagnostic only and must not replace the blue/green workflow status badge.
+- **Data-quality filtering:** place an “All data / Data issues only” selector beside the other
+  list filters. It refines list results only; it must not be represented as a workflow status.
 
 ## Typography
 

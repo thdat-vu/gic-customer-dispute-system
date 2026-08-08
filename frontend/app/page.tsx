@@ -110,12 +110,24 @@ function OutcomeBadge({ outcome }: { outcome: string | null }) {
   )
 }
 
+function DataQualityBadge({ hasIssue }: { hasIssue: boolean }) {
+  if (!hasIssue) {
+    return <span className="text-xs text-slate-500">—</span>
+  }
+
+  return (
+    <Badge className="rounded-sm border-amber-200 bg-amber-50 text-amber-800" variant="outline">
+      {UiText.DATA_QUALITY_ISSUE}
+    </Badge>
+  )
+}
+
 function LoadingRows() {
   return (
     <TableBody>
       {Array.from({ length: 6 }).map((_, index) => (
         <TableRow key={index}>
-          {Array.from({ length: 9 }).map((__, columnIndex) => (
+          {Array.from({ length: 10 }).map((__, columnIndex) => (
             <TableCell key={columnIndex}>
               <Skeleton className="h-4 w-full" />
             </TableCell>
@@ -139,6 +151,7 @@ export default function Home() {
   const [endMonth, setEndMonth] = useState(initialEndMonth)
   const [region, setRegion] = useState("")
   const [statusFilter, setStatusFilter] = useState(CaseFilter.ALL)
+  const [dataQualityFilter, setDataQualityFilter] = useState(CaseFilter.ALL)
   const [submittedQuery, setSubmittedQuery] = useState({
     endMonth: initialEndMonth,
     field: SearchField.USER_ID,
@@ -146,6 +159,7 @@ export default function Home() {
     region: "",
     startMonth: initialStartMonth,
     status: CaseFilter.ALL,
+    dataQuality: CaseFilter.ALL,
     term: "",
   })
   const [role, setRole] = useState(Role.ANALYST)
@@ -156,6 +170,9 @@ export default function Home() {
     let active = true
     getCases({
       endMonth: submittedQuery.endMonth,
+      hasDataQualityIssue: submittedQuery.dataQuality === CaseFilter.DATA_QUALITY_ISSUES
+        ? true
+        : undefined,
       page: submittedQuery.page,
       region: submittedQuery.region,
       searchField: submittedQuery.field,
@@ -191,6 +208,7 @@ export default function Home() {
       region: region.trim(),
       startMonth,
       status: statusFilter,
+      dataQuality: dataQualityFilter,
       term: searchTerm.trim(),
     })
   }
@@ -204,6 +222,7 @@ export default function Home() {
     setSearchTerm("")
     setStartMonth(initialStartMonth)
     setStatusFilter(CaseFilter.ALL)
+    setDataQualityFilter(CaseFilter.ALL)
     setSubmittedQuery({
       endMonth: initialEndMonth,
       field: SearchField.USER_ID,
@@ -211,6 +230,7 @@ export default function Home() {
       region: "",
       startMonth: initialStartMonth,
       status: CaseFilter.ALL,
+      dataQuality: CaseFilter.ALL,
       term: "",
     })
   }
@@ -233,7 +253,7 @@ export default function Home() {
     )))
   }
 
-  const isSearching = submittedQuery.term.length > 0 || submittedQuery.region.length > 0 || submittedQuery.status !== CaseFilter.ALL || submittedQuery.startMonth.length > 0 || submittedQuery.endMonth.length > 0
+  const isSearching = submittedQuery.term.length > 0 || submittedQuery.region.length > 0 || submittedQuery.status !== CaseFilter.ALL || submittedQuery.dataQuality !== CaseFilter.ALL || submittedQuery.startMonth.length > 0 || submittedQuery.endMonth.length > 0
   const pageCount = Math.ceil(total / Pagination.DEFAULT_LIMIT)
   const searchPlaceholder = searchField === SearchField.EMAIL
     ? "Search email"
@@ -378,6 +398,15 @@ export default function Home() {
                   <SelectItem value={CaseStatus.RESOLVED}>Resolved</SelectItem>
                 </SelectContent>
               </Select>
+              <Select onValueChange={(value) => value && setDataQualityFilter(value)} value={dataQualityFilter}>
+                <SelectTrigger aria-label="Data quality filter" className="h-9 min-w-36 border-slate-300 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CaseFilter.ALL}>{UiText.ALL_DATA}</SelectItem>
+                  <SelectItem value={CaseFilter.DATA_QUALITY_ISSUES}>{UiText.DATA_QUALITY_ISSUES_ONLY}</SelectItem>
+                </SelectContent>
+              </Select>
               <div>
                 <label className="sr-only" htmlFor="region-filter">Region</label>
                 <Input
@@ -423,6 +452,7 @@ export default function Home() {
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Outcome</TableHead>
+                    <TableHead>{UiText.DATA_QUALITY}</TableHead>
                   </TableRow>
                 </TableHeader>
                 {loading ? (
@@ -450,6 +480,9 @@ export default function Home() {
                         </TableCell>
                         <TableCell className="py-2"><StatusBadge status={caseItem.status} /></TableCell>
                         <TableCell className="py-2"><OutcomeBadge outcome={caseItem.outcome} /></TableCell>
+                        <TableCell className="py-2">
+                          <DataQualityBadge hasIssue={caseItem.has_data_quality_issue} />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

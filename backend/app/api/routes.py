@@ -14,7 +14,13 @@ from app.schemas import (
     OutcomeSubmission,
     TrendResponse,
 )
-from app.schemas.cases import CaseStatusValue, SearchFieldValue
+from app.schemas.cases import (
+    CaseStatusValue,
+    SearchFieldValue,
+    case_detail_response,
+    case_response,
+)
+from app.repositories import duplicate_case_ids
 from app.services import (
     get_case,
     get_case_history,
@@ -45,6 +51,7 @@ def list_cases(
     q: str | None = None,
     region: str | None = None,
     case_status: Annotated[CaseStatusValue | None, Query(alias="status")] = None,
+    has_data_quality_issue: bool | None = None,
     page: int = Query(default=Pagination.DEFAULT_PAGE, ge=Pagination.DEFAULT_PAGE),
     limit: int = Query(default=Pagination.DEFAULT_LIMIT, ge=1, le=Pagination.MAX_LIMIT),
     start_month: Annotated[str | None, Query(pattern=MonthRange.PATTERN)] = None,
@@ -72,7 +79,7 @@ def list_cases(
                 }
             ]
         )
-    cases, total = get_cases(
+    cases, total, duplicates = get_cases(
         database_session,
         search_field,
         q,
@@ -82,8 +89,11 @@ def list_cases(
         end_month,
         page,
         limit,
+        has_data_quality_issue,
     )
-    return CaseListResponse(items=cases, total=total)
+    return CaseListResponse(
+        items=[case_response(case, duplicates) for case in cases], total=total
+    )
 
 
 @router.get(
@@ -92,7 +102,9 @@ def list_cases(
     responses=NotFoundAndValidationErrorResponses,
 )
 def get_case_detail(case_id: int, database_session: DatabaseSession) -> CaseDetailResponse:
-    return CaseDetailResponse.model_validate(get_case(database_session, case_id))
+    return case_detail_response(
+        get_case(database_session, case_id), duplicate_case_ids(database_session)
+    )
 
 
 @router.post(
@@ -105,8 +117,9 @@ def save_case_outcome(
     submission: OutcomeSubmission,
     database_session: DatabaseSession,
 ) -> CaseDetailResponse:
-    return CaseDetailResponse.model_validate(
-        record_outcome(database_session, case_id, submission)
+    return case_detail_response(
+        record_outcome(database_session, case_id, submission),
+        duplicate_case_ids(database_session),
     )
 
 

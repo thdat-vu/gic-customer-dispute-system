@@ -183,6 +183,27 @@ only the file that was raised in review.
 This log is supporting evidence only. I will finalize the required human before/after disclosure
 for the submission with a concrete implementation example after one exists.
 
+## Candidate 11 — Historical data-quality visibility
+
+### AI-assisted finding
+
+During final UI review, I asked whether the known malformed seed records were visibly indicated.
+Codex confirmed that the existing `open` and `resolved` values are business workflow states and
+that adding a third status would conflict with the approved data model.
+
+### Candidate direction
+
+I approved a separate, read-only `has_data_quality_issue` flag plus stable issue codes on case
+list/detail responses. The UI renders an amber `Data issue` badge and explanatory reasons, plus
+an optional Data issues-only filter that is applied before pagination. It detects the six
+documented anomaly classes, but does not clean source data or change a case's outcome workflow.
+
+### Reason for change
+
+This makes planted seed-data canaries visible during assessment review while preserving FR-9's
+as-is import rule. The chosen alternative was a third case status such as `needs_review`; I
+rejected it because it would conflate data diagnostics with the only two defined business states.
+
 ## Candidate 03 — Stitch UI exploration and Codex handoff
 
 ### Evidence

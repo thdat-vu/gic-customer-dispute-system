@@ -34,6 +34,10 @@ The unit of work: one customer dispute.
 | `outcome` | nullable string | mutable via FR-4/FR-5 | **application-layer** enum (`won`/`lost`/`fraud_confirmed`) enforced only on new writes; stored as plain string to tolerate historical seed anomalies (SRS FR-9) |
 | `outcome_note` | nullable string | mutable via FR-4/FR-5 | free text, assumed max ~1000 chars (flagged default) |
 
+`has_data_quality_issue` and `data_quality_issues` are read-model diagnostics (FR-10), not
+stored `Case` attributes and not case states. They are calculated from the current historical
+record plus duplicate external IDs; no remediation workflow is introduced.
+
 > All fields except `status`, `outcome`, `outcome_note` are **read-only reference data** as far
 > as this tool is concerned — nothing in the brief or your decisions asks for editing customer
 > identity/amount/region data, so no update path exists for them. Stated explicitly here so it

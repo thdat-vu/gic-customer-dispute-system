@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.constants import AuditEventType, CaseStatus, OutcomeValue
+from app.constants import AuditEventType, CaseStatus, DataQualityIssue, OutcomeValue
 from app.database import create_database_schema, create_sqlite_engine, get_session
 from app.main import app
 from app.models import Case, OutcomeAuditEntry
@@ -179,6 +179,81 @@ def test_case_list_combines_exact_region_and_status_filters(client: TestClient) 
     assert response.status_code == 200
     assert response.json()["total"] == 1
     assert response.json()["items"][0]["id"] == matching_case_id
+
+
+def test_case_responses_flag_data_quality_issues_without_changing_status(
+    client: TestClient,
+) -> None:
+    duplicate_one_id = add_case(client, make_case(case_id="CASE-DUPLICATE"))
+    duplicate_two_id = add_case(client, make_case(case_id="CASE-DUPLICATE"))
+    anomalous_case_id = add_case(
+        client,
+        make_case(
+            case_id="CASE-ANOMALOUS",
+            user_id=None,
+            amount=-1.0,
+            created_at="2099-01-01T00:00:00Z",
+            status=CaseStatus.OPEN,
+            outcome="maybe",
+        ),
+    )
+
+    list_response = client.get("/api/cases", params={"limit": 20})
+    detail_response = client.get(f"/api/cases/{anomalous_case_id}")
+    duplicate_detail_response = client.get(f"/api/cases/{duplicate_one_id}")
+
+    assert list_response.status_code == 200
+    assert detail_response.status_code == 200
+    assert duplicate_detail_response.status_code == 200
+    assert detail_response.json()["status"] == CaseStatus.OPEN
+    assert detail_response.json()["has_data_quality_issue"] is True
+    assert set(detail_response.json()["data_quality_issues"]) == {
+        DataQualityIssue.FUTURE_CREATED_AT,
+        DataQualityIssue.INVALID_OUTCOME,
+        DataQualityIssue.MISSING_USER_ID,
+        DataQualityIssue.NEGATIVE_AMOUNT,
+        DataQualityIssue.STATUS_OUTCOME_MISMATCH,
+    }
+    assert duplicate_detail_response.json()["has_data_quality_issue"] is True
+    assert duplicate_detail_response.json()["data_quality_issues"] == [
+        DataQualityIssue.CASE_ID_DUPLICATE
+    ]
+    assert duplicate_two_id != duplicate_one_id
+
+
+def test_case_list_filters_data_quality_issues_before_pagination(
+    client: TestClient,
+) -> None:
+    normal_case_ids = [
+        add_case(
+            client,
+            make_case(
+                case_id=f"CASE-NORMAL-{index}",
+                created_at=f"2026-02-{index + 1:02d}T00:00:00Z",
+            ),
+        )
+        for index in range(20)
+    ]
+    flagged_case_id = add_case(
+        client,
+        make_case(
+            case_id="CASE-FLAGGED",
+            created_at="2026-01-01T00:00:00Z",
+            user_id=None,
+        ),
+    )
+
+    response = client.get("/api/cases", params={"has_data_quality_issue": "true"})
+    inverse_response = client.get(
+        "/api/cases", params={"has_data_quality_issue": "false"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["total"] == 1
+    assert response.json()["items"][0]["id"] == flagged_case_id
+    assert inverse_response.status_code == 200
+    assert inverse_response.json()["total"] == 20
+    assert inverse_response.json()["items"][0]["id"] in normal_case_ids
 
 
 @pytest.mark.parametrize(
