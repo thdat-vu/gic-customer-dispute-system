@@ -14,10 +14,16 @@ storage technology.
 ### 1.1 `Case`
 The unit of work: one customer dispute.
 
+> **Revised after Codex-assisted spec review:** `case_id` is **not unique** in the source data
+> (`CASE-00213` appears as two distinct physical rows — a deliberately planted canary; see
+> `00-problem-statement.md` §9). A case is therefore identified by a surrogate `id`, not by
+> `case_id`. `case_id` remains a display/reference label only.
+
 | Attribute | Type (conceptual) | Mutability | Notes |
 |---|---|---|---|
-| `case_id` | identifier | immutable | from seed data, e.g. `CASE-00034` |
-| `user_id` | string | immutable | reference to the customer; not editable via this tool |
+| `id` | identifier (surrogate, system-generated) | immutable | **actual identity of a `Case`**; used for all addressing (API paths, FK targets) |
+| `case_id` | string | immutable | from seed data, e.g. `CASE-00034`; **not unique** — do not use as a lookup key or FK target |
+| `user_id` | nullable string | immutable | reference to the customer; not editable via this tool; can be blank in source data (`CASE-00218`) — treated as legitimately missing, not an error |
 | `user_email` | string | immutable | PII — displayed in full per BR-4 (v1) |
 | `device_id` | string | immutable | PII-adjacent — displayed in full per BR-4 (v1) |
 | `amount` | decimal | immutable | can be negative in seed data (`CASE-00216`) — accepted as-is, no business meaning assigned to sign (out of scope to interpret) |
@@ -39,7 +45,7 @@ One row per capture or correction event. Append-only — never updated or delete
 | Attribute | Type (conceptual) | Notes |
 |---|---|---|
 | `id` | identifier | system-generated |
-| `case_id` | reference to `Case` | required |
+| `case_ref_id` | reference to `Case.id` (surrogate) | required — **not** `Case.case_id`, since that's not unique |
 | `event_type` | enum: `captured`, `corrected` | `captured` = first-ever outcome on this case; `corrected` = any subsequent change |
 | `previous_outcome` | nullable string | null for `captured` events |
 | `new_outcome` | string | the value after this event |
@@ -91,6 +97,8 @@ Case (1) ──────< (0..N) OutcomeAuditEntry
 |---|---|---|---|
 | INV-1 | A case with `status = open` has `outcome = null` | Enforced by FR-4/FR-5 write logic going forward | `CASE-00220` violates this at import time (accepted per BR-7) |
 | INV-2 | `outcome`, when set via the API (FR-4/FR-5), is one of `won`/`lost`/`fraud_confirmed` | API/application layer only, not DB constraint | `CASE-00215` (`outcome=maybe`) violates this at import time (accepted per BR-7/FR-9) |
+| INV-6 | `id` (surrogate) uniquely identifies exactly one `Case` | DB primary key | none — this is why `id` exists instead of relying on `case_id` |
+| INV-7 | `case_id` may repeat across multiple `Case` rows and must never be used as a lookup key or FK target | Convention enforced by code review / no unique constraint on `case_id` | `CASE-00213` is the known instance (accepted per BR-7/FR-9) |
 | INV-3 | Every `captured`/`corrected` event that changes outcome or note produces exactly one `OutcomeAuditEntry` | Application layer | No-op submits produce zero entries (FR-5) |
 | INV-4 | `OutcomeAuditEntry` rows are never updated or deleted | Application layer (no update/delete code path exists for this entity) | none |
 | INV-5 | `case_id`, `user_id`, `user_email`, `device_id`, `amount`, `currency`, `created_at`, `region` are never modified by this tool | No update path exposed for these fields | none |

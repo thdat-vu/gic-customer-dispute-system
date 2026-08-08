@@ -1,0 +1,27 @@
+# OS and editor files
+.DS_Store
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Local assignment source
+GIC.md
+
+# Python / FastAPI
+backend/.venv/
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/.pytest_cache/
+backend/data/*.db
+backend/data/*.sqlite*
+
+# Next.js / Node.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# Logs
+*.log

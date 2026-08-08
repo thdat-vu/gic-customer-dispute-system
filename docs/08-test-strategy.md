@@ -20,7 +20,8 @@ clicking around the UI — exactly what a reviewer is likely checking for.
 | Correcting an outcome on a `resolved` case creates one `corrected` audit entry with correct previous/new values | FR-5 | FR-5 |
 | Submitting identical outcome+note on an already-resolved case creates **zero** new audit entries | FR-5 no-op rule | FR-5, OQ-3 |
 | Submitting an invalid outcome value (not in the 3-value enum) is rejected before reaching the service layer | FR-4/FR-5 validation | INV-2 |
-| Seed import loads all 220 rows including the 4 anomalous ones without raising, and `CASE-00215`'s `outcome="maybe"` is stored as-is (not rejected, not coerced) | FR-9 | FR-9, INV-2 exception |
+| Seed import loads all 220 rows (including all six anomalies: `CASE-00213` x2, `CASE-00215`, `CASE-00216`, `CASE-00217`, `CASE-00218`, `CASE-00220`) without raising, and `CASE-00215`'s `outcome="maybe"` is stored as-is (not rejected, not coerced) | FR-9 | FR-9, INV-2 exception |
+| Seed import correctly parses the 4 rows whose `outcome_note` contains an embedded comma (e.g. `CASE-00027`) — note text is preserved whole, not truncated at the comma | CSV parsing correctness | `05-data-model.md` §4 hazard note |
 | Trend aggregation counts only `resolved` cases, grouped correctly by month | FR-7 | FR-7 |
 
 ## 2. Priority P1 — API-level integration tests (backend, real HTTP via FastAPI TestClient)

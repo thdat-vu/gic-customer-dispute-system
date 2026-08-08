@@ -37,7 +37,8 @@ stop polishing and move on.
 ## Milestone 3 — Backend API layer (≈1.5h)
 - Implement all 5 endpoints from `06-api-contracts.md` (list/search, detail, capture/correct,
   history, trends) as thin wrappers over Milestone 2's services.
-- Add the shared error envelope + CORS config (`07-security.md` §3).
+- Add the shared error envelope (per `06-api-contracts.md` §6 — the single authoritative
+  contract) + CORS config (per `04-architecture.md` §3).
 - Write P1 integration tests.
 - **Done when:** Swagger UI (`/docs`) shows all 5 endpoints correctly, P1 tests pass, and you can
   manually exercise every endpoint via Swagger UI.

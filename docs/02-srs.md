@@ -64,13 +64,18 @@ partial value, **when** they submit the search, **then** the list shows only cas
 selected field contains the typed value (case-insensitive substring match).
 **Given** no case matches, **then** an explicit "no results" empty state is shown (distinct
 from the "zero cases exist at all" empty state).
-*Traces to:* BR-5.
+**Given** a case has a `NULL` value in the selected search field (e.g. `CASE-00218`'s blank
+`user_id`), **when** searching that field, **then** that case is simply never matched (NULL
+never satisfies a partial-match search) — not treated as an error.
+*Traces to:* BR-5, FR-9 (nullable `user_id`).
 
 ### FR-3 — View case detail
 **Given** an actor selects a case from the list, **when** the detail view loads, **then** it
-shows all read-only fields (`case_id`, `user_id`, `user_email`, `device_id`, `amount`,
-`currency`, `created_at`, `region`) plus current `status`/`outcome`/`outcome_note`.
-*Traces to:* base requirement from GIC brief.
+shows all read-only fields (`id` [surrogate], `case_id` [display label, may repeat across rows
+— see FR-9], `user_id`, `user_email`, `device_id`, `amount`, `currency`, `created_at`, `region`)
+plus current `status`/`outcome`/`outcome_note`. The frontend addresses/navigates to a case using
+`id`, never `case_id`, since `case_id` is not guaranteed unique.
+*Traces to:* base requirement from GIC brief; FR-9 (surrogate key resolution).
 
 ### FR-4 — Capture outcome
 **Given** an Analyst opens a case with `status = open`, **when** they select an outcome
@@ -118,15 +123,26 @@ section for Manager) without a page reload or data loss.
 *Traces to:* Phase-1 role decision.
 
 ### FR-9 — Seed data import
-**Given** the provided 220-row CSV, **when** the system is initialized, **then** all rows are
-loaded as-is, including the four anomalous rows (`CASE-00220`, `CASE-00215`, `CASE-00216`,
-`CASE-00217`) — no rejection, no cleanup, no special-casing.
-*Traces to:* BR-7. **Design consequence resolved here:** the `outcome` column must **not** have
-a hard database-level enum/CHECK constraint (it will be a plain nullable string at the storage
-layer), because `CASE-00215`'s `outcome=maybe` would otherwise fail to import. Enum validity
-(`won`/`lost`/`fraud_confirmed`) is enforced only at the **API/application layer** for new
-writes coming through FR-4/FR-5 — not for the historical seed data. This resolves the open
-thread flagged in Phase 1 §9.
+**Given** the provided 220-row CSV, **when** the system is initialized, **then** all 220 rows
+are loaded as **220 distinct case records**, including all six anomalous rows (`CASE-00220`,
+`CASE-00215`, `CASE-00216`, `CASE-00217`, both physical `CASE-00213` rows, `CASE-00218`) — no
+rejection, no cleanup, no merging, no special-casing.
+
+*Traces to:* BR-7. **Design consequences resolved here** (updated after Codex-assisted review
+found two additional anomalies the original pass missed — see `00-problem-statement.md` §9):
+
+1. The `outcome` column has **no** hard database-level enum/CHECK constraint (plain nullable
+   string at the storage layer), because `CASE-00215`'s `outcome=maybe` would otherwise fail to
+   import. Enum validity (`won`/`lost`/`fraud_confirmed`) is enforced only at the
+   **API/application layer** for new writes coming through FR-4/FR-5 — never for historical
+   seed data on read.
+2. **`case_id` is not the primary key.** Because `CASE-00213` legitimately appears as two
+   separate physical rows, the primary key must be a surrogate `id` (auto-increment integer),
+   with `case_id` demoted to a regular (non-unique) indexed column. Every API route that
+   previously addressed a case by `case_id` now addresses it by this surrogate `id`
+   (`06-api-contracts.md` updated accordingly).
+3. **`user_id` is nullable.** `CASE-00218` has a blank `user_id` in the source CSV; the column
+   constraint must permit this rather than reject or fabricate a value for that row.
 
 ---
 

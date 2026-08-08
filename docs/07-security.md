@@ -22,24 +22,27 @@ almost directly into your submission doc's "Concerns & Tradeoffs" section.
 
 ## 2. Input validation
 
-- Every write endpoint (`POST /cases/{case_id}/outcome`) validates `outcome` against the
+- Every write endpoint (`POST /cases/{id}/outcome`) validates `outcome` against the
   3-value enum via Pydantic — invalid values never reach the service/domain layer, rejected at
   the API boundary with `422` (per `06-api-contracts.md` §3).
 - `outcome_note` length is capped (assumed 1000 chars, per `05-data-model.md`) at the schema
   layer, not the database layer — prevents unbounded payloads without needing a DB constraint.
-- Path parameters (`case_id`) are validated implicitly by the `404` lookup — no separate format
+- Path parameters (`id`) are validated implicitly by the `404` lookup — no separate format
   validation needed since a non-existent ID just fails the lookup.
 
 ## 3. Failure handling
 
-- **Case not found** (`GET`/`POST` on a bad `case_id`): `404` with the standard error envelope
-  (`06-api-contracts.md` §6) — never a raw 500 or unhandled exception.
-- **Malformed request body**: `422` with field-level detail (Pydantic default), sufficient for
-  the frontend to highlight which field was invalid.
-- **Unexpected server error** (e.g., DB file locked, disk full): generic `500` with a non-leaky
-  message (`"internal error, please try again"`) — no stack trace, no SQL, no file paths
-  returned to the client. Full details go to server-side logs only (stdout is sufficient for
-  this scope — no external logging/monitoring service required).
+- **Case not found** (`GET`/`POST` on a nonexistent `id`): `404` using the shared error envelope
+  defined in `06-api-contracts.md` §6 — never a raw 500 or unhandled exception.
+- **Malformed request body**: `422` using the **same** shared error envelope (`06-api-contracts.md`
+  §6), with Pydantic's field-level detail transformed into the envelope's `fields` array — **not**
+  FastAPI/Pydantic's raw default `{"detail": [...]}` shape. (This corrects an earlier draft of
+  this section that described the untransformed Pydantic default; `06-api-contracts.md` §6 is
+  the authoritative contract and this section must stay consistent with it, not restate it.)
+- **Unexpected server error** (e.g., DB file locked, disk full): generic `500` using the shared
+  envelope, non-leaky message (`"internal error, please try again"`) — no stack trace, no SQL,
+  no file paths returned to the client. Full details go to server-side logs only (stdout is
+  sufficient for this scope — no external logging/monitoring service required).
 - **Frontend network failure** (backend unreachable, timeout): shown as a generic "couldn't
   reach the server" banner rather than a blank/frozen UI — this is a testable UI requirement,
   not just a nice-to-have.

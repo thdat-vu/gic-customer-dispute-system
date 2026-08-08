@@ -1,0 +1,137 @@
+# GCI Dispute Outcome Tracking Tool
+
+> Draft status: update the implementation evidence, commands, repository URL, video URL, and
+> final AI before/after example before submitting. Do not claim a feature is complete until it
+> has been implemented and validated.
+
+## 1. Understanding & Assumptions
+
+The problem is a data-capture and visibility gap, not a fraud-decisioning problem. Analysts
+already determine whether a dispute was won, lost, or fraud-confirmed, but those decisions are
+not consistently recorded in a queryable system. This tool provides a small workflow to find a
+case, record or correct its outcome, and view aggregate trends.
+
+Key assumptions and decisions:
+
+- The UI has an “Acting as” Analyst/Manager switcher only; it is not authentication or a
+  security boundary. The API records the supplied editor role but does not authorize it.
+- Outcome corrections are allowed and append an audit entry only when outcome or note changes.
+- Trends are grouped by the case `created_at` month. This is simple and matches the supplied
+  data, but it is not a measure of when the outcome was recorded.
+- The seed data is preserved as historical evidence, including malformed values. The schema is
+  permissive at rest and validates new outcome writes at the application boundary.
+- The 220 source rows are retained as 220 distinct records. A surrogate `id` identifies records;
+  `case_id` remains a non-unique display field because one source ID is duplicated.
+
+## 2. Requirements Analysis
+
+### 2.1 Functional requirements
+
+- List all cases newest-first and search one selected field (`user_id`, `device_id`, or email)
+  using case-insensitive partial matching.
+- Show read-only case detail using the surrogate record ID for navigation.
+- Let an Analyst capture `won`, `lost`, or `fraud_confirmed` with an optional note; resolving a
+  case creates a `captured` audit event.
+- Let an Analyst correct a resolved case. A no-op submission must not alter the case or add audit
+  noise.
+- Let a Manager view per-case history in the UI; the history API remains role-agnostic because
+  roles are a UI-only simulation.
+- Show outcome counts by month, with a clear empty state when no resolved cases exist.
+
+### 2.2 Non-functional requirements considered
+
+- **Performance:** the bounded 220-row dataset does not justify caching, queues, or scaling work.
+- **Data sensitivity:** email and device ID are visible in full in v1; this is an explicit
+  time-boxed tradeoff, not a production privacy design.
+- **Error handling:** every API error uses one envelope. Validation errors include structured
+  field details; unexpected errors remain generic and non-leaky.
+- **Maintainability:** business rules live in a service layer and are covered first by focused
+  domain tests.
+- **Data quality:** the CSV is parsed with an RFC4180-aware parser and UTF-8; duplicate external
+  case IDs and a blank historical user ID are retained rather than silently “fixed.”
+
+## 3. Design
+
+### 3.1 Data model
+
+`Case` uses an auto-increment integer `id` as its primary key. `case_id` is indexed but not
+unique; `user_id` is nullable to preserve the provided blank historical value. Other case fields
+are immutable reference data in this tool. `status`, `outcome`, and `outcome_note` are the only
+mutable case fields.
+
+`OutcomeAuditEntry` is append-only and references `Case.id` through `case_ref_id`. It records the
+event type, prior/new outcome and note, supplied editor role, and timestamp. `outcome` has no
+database CHECK constraint so the historical `maybe` seed value imports unchanged; new API writes
+accept only the three supported outcome values.
+
+### 3.2 API contract
+
+- `GET /api/cases` lists or single-field-searches cases.
+- `GET /api/cases/{id}` returns a record detail.
+- `POST /api/cases/{id}/outcome` captures or corrects an outcome based on current status.
+- `GET /api/cases/{id}/history` returns most-recent-first audit entries.
+- `GET /api/trends?group_by=month|region` returns outcome-count buckets.
+
+Every 4xx/5xx response uses `{ "error": { "code", "message", "fields" } }`. The `fields`
+key is always present: `null` for non-validation errors and an array for validation errors.
+
+### 3.3 Architecture notes
+
+The repository is a small monorepo: a Python/FastAPI service backed by SQLite and a Next.js
+TypeScript App Router frontend. The browser calls the FastAPI API directly over local HTTP; CORS
+permits the local frontend origin. The backend is intentionally layered as route handler →
+service → repository → SQLite so the capture/correction and audit rules can be tested without
+HTTP plumbing.
+
+## 4. Concerns, Tradeoffs, and What I'd Do With More Time
+
+- UI-only roles are intentionally not secure. A production version would authenticate users and
+  derive the audit identity and authorization from the session.
+- Full email/device-ID display and unencrypted local SQLite are accepted only for this local
+  assessment scope.
+- `created_at` trends can differ from outcome-recording time. I would add `resolved_at` and offer
+  it as an alternative trend axis.
+- I would add pagination, PII masking, stronger frontend tests, and end-to-end tests only after
+  the core workflow is complete and validated.
+- The source data contains deliberate anomalies. Retaining them demonstrates tolerant historical
+  ingestion, but a production system would require a defined remediation process.
+
+## 5. AI Usage Disclosure
+
+### Tools used
+
+Codex and Claude.
+
+### What I used them for
+
+- Extracting the raw CSV appendix into a valid seed file.
+- Reviewing the specification for cross-document contradictions and tracking their resolution.
+- Drafting repository instructions, lightweight safety hooks, scaffolding commands, boilerplate,
+  and focused test ideas.
+- Summarizing tradeoffs and helping prepare this document.
+
+I used AI to accelerate the work under the 24-hour time limit. I remained responsible for
+checking generated output against the assignment and the project documents, deciding what to
+keep, and not claiming unverified work as complete.
+
+### Specific before/after example
+
+**AI-generated draft:** the early data-model draft treated external `case_id` as the database
+primary key and `user_id` as required.
+
+**Revised version:** the final specification uses surrogate `Case.id` as the primary key,
+preserves `case_id` as non-unique, and permits a nullable historical `user_id`.
+
+**Why I changed it:** reviewing the extracted CSV found two `CASE-00213` rows and a blank
+`user_id` on `CASE-00218`. Keeping the initial constraints would have rejected or merged source
+data, conflicting with the requirement to preserve all 220 records as-is.
+
+Supporting notes and the exact review trail are kept in `ai-usage-log.md`. Before submission, I
+will verify this example accurately describes my own decision process and replace any placeholder
+links below.
+
+---
+
+Video walkthrough (2–3 min, Loom or phone recording, English): `[TODO]`
+
+GitHub repository: `[TODO]`

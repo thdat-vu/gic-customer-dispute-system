@@ -104,8 +104,12 @@ the capture flow.
 
 ## 9. Known data quality anomalies in the seed dataset
 
-Four rows in the provided 220-row seed dataset appear to be **deliberately planted test
-cases**, not organic noise:
+**Revision note:** this list originally had 4 entries and was found to be incomplete during a
+Codex-assisted review of the finalized docs (2 more rows were missed on first pass). Corrected
+here — treat this section as the authoritative, complete list going forward.
+
+Six rows in the provided 220-row seed dataset appear to be **deliberately planted test cases**,
+not organic noise:
 
 - `CASE-00220`: `status=open` but `outcome=lost` is already set — note field literally says
   "Status/outcome mismatch canary"
@@ -114,6 +118,28 @@ cases**, not organic noise:
 - `CASE-00216`: `amount=-42.5` — negative amount
 - `CASE-00217`: `created_at=2027-03-15` — a future date relative to the rest of the dataset (all
   other rows are 2026)
+- `CASE-00213`: appears **twice** as two physically distinct CSV rows with different `user_id`,
+  `user_email`, `device_id`, `amount`, `currency`, and `created_at` — the second occurrence's
+  note literally says "Duplicate case_id canary - second occurrence." This directly conflicts
+  with using `case_id` as a unique primary key (resolved in §9.1 below).
+- `CASE-00218`: `user_id` is blank/empty — no note field, but conspicuous given every other row
+  has a populated `user_id`.
+
+### 9.1 Resolution — decided after data-model checkpoint, updates `05-data-model.md`
+
+Both new anomalies force a schema-level decision (not just an "import tolerantly" decision like
+the original four), because they conflict with structural constraints already drafted:
+
+- **Duplicate `case_id` (resolution):** `case_id` is demoted from primary key to a regular
+  indexed column (no longer required to be unique). A new surrogate `id` (auto-increment
+  integer) becomes the actual primary key and the value used to address a specific case via the
+  API (`/cases/{id}` instead of `/cases/{case_id}`). This is the only option that satisfies
+  FR-9's "preserve all 220 rows as-is" while still having a working, unambiguous primary key —
+  the alternative (drop/merge one of the two `CASE-00213` rows) was rejected because it directly
+  contradicts FR-9, which is a firm requirement from the GIC brief, not a nice-to-have.
+- **Blank `user_id` (resolution):** `user_id` becomes nullable. Same underlying principle as
+  BR-7/INV-2 — the seed layer stays permissive to preserve historical/legacy data exactly as
+  given, and validation only applies to new writes through the app, not historical reads.
 
 **Decision (per BR-7):** these rows will be imported as-is, without special-case cleaning or
 rejection logic, consistent with your instruction to prioritize speed and stay within scope.

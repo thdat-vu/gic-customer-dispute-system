@@ -27,7 +27,7 @@ repo/
 │   ├── tests/
 │   └── requirements.txt / pyproject.toml
 ├── frontend/                 # Next.js app, own package.json
-│   ├── app/ (or pages/ — pick one, see OQ below)
+│   ├── app/                   # Next.js App Router (resolved below — not Pages Router)
 │   ├── components/
 │   ├── lib/api.ts             # thin fetch wrapper around backend endpoints
 │   └── package.json

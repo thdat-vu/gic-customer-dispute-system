@@ -5,6 +5,12 @@
 be FastAPI's auto-generated OpenAPI schema (`/openapi.json`) once implemented — the two must
 match; if they ever drift, the OpenAPI output wins since it's generated from actual code.
 
+> **Revision (Codex-assisted review):** all case-addressing routes now use the surrogate `id`
+> instead of `case_id`, because `case_id` is not unique (`CASE-00213` duplicate — see
+> `00-problem-statement.md` §9.1 / `05-data-model.md` §1). §6's error envelope is now confirmed
+> as the single shape for **all** error responses, including `422`, resolving the earlier
+> inconsistency between §1 and §6.
+
 Base URL (local dev): `http://localhost:8000/api`
 
 ---
@@ -27,6 +33,7 @@ List/search cases. Traces to FR-1, FR-2.
 {
   "items": [
     {
+      "id": 34,
       "case_id": "CASE-00034",
       "user_id": "usr-217308",
       "user_email": "dakota.nguyen10@inbox.test",
@@ -43,20 +50,23 @@ List/search cases. Traces to FR-1, FR-2.
 }
 ```
 `outcome_note` and audit history are **not** included in the list response (kept for the detail
-endpoint) to keep the list payload light.
+endpoint) to keep the list payload light. `id` (surrogate) is the field the frontend uses to
+navigate to a case's detail view — `case_id` is display-only and may repeat across items (see
+`CASE-00213`).
 
-**Error `422`**: `search_field` provided without `q` (or vice versa) — structured validation
-error, standard FastAPI/Pydantic shape.
+**Error `422`**: `search_field` provided without `q` (or vice versa) — uses the shared error
+envelope (§6).
 
 ---
 
-## 2. `GET /cases/{case_id}`
+## 2. `GET /cases/{id}`
 
-Case detail. Traces to FR-3.
+Case detail. Traces to FR-3. `{id}` is the surrogate integer key, **not** `case_id`.
 
 **Response `200`**
 ```json
 {
+  "id": 73,
   "case_id": "CASE-00073",
   "user_id": "usr-831295",
   "user_email": "dakota.patel17@notreal.dev",
@@ -71,11 +81,11 @@ Case detail. Traces to FR-3.
 }
 ```
 
-**Error `404`**: `case_id` does not exist.
+**Error `404`**: no case exists with the given `id`.
 
 ---
 
-## 3. `POST /cases/{case_id}/outcome`
+## 3. `POST /cases/{id}/outcome`
 
 Capture (first time) or correct (subsequent) an outcome. Backend determines which based on the
 case's current `status` — the client does not need to know or declare which one it's doing.
@@ -95,19 +105,20 @@ Traces to FR-4, FR-5.
 - `editor_role`: required string, **not validated against a fixed set** and **not used for
   authorization** — recorded as-is into the audit entry (SRS §1: API is role-agnostic).
 
-**Response `200`** — the updated case detail (same shape as `GET /cases/{case_id}`).
+**Response `200`** — the updated case detail (same shape as `GET /cases/{id}`).
 
 **Behavior detail (must match FR-5's no-op rule):** if the request's `outcome` and
 `outcome_note` are identical to the case's current values, the case is left unchanged and
 **no** audit entry is created — response is still `200` with the (unchanged) case detail, since
 this isn't an error condition, just a no-op.
 
-**Error `404`**: `case_id` does not exist.
-**Error `422`**: `outcome` missing or not one of the three valid values.
+**Error `404`**: no case exists with the given `id`.
+**Error `422`**: `outcome` missing or not one of the three valid values — uses the shared error
+envelope (§6).
 
 ---
 
-## 4. `GET /cases/{case_id}/history`
+## 4. `GET /cases/{id}/history`
 
 Audit trail for a case. Traces to FR-6. **Not role-gated at the API level** — the frontend
 simply never calls this endpoint when acting as Analyst (SRS §1); any direct caller can still
@@ -116,6 +127,7 @@ retrieve it.
 **Response `200`**
 ```json
 {
+  "id": 73,
   "case_id": "CASE-00073",
   "entries": [
     {
@@ -134,7 +146,7 @@ retrieve it.
 Ordered most-recent-first. Empty `entries` array (not an error) if the case has never been
 resolved.
 
-**Error `404`**: `case_id` does not exist.
+**Error `404`**: no case exists with the given `id`.
 
 ---
 
@@ -183,19 +195,52 @@ Frontend renders the FR-7 empty state for this case.
 
 ## 6. Cross-cutting error shape
 
-All `4xx`/`5xx` responses share a consistent envelope so the frontend can handle errors
-generically:
+**This section is the single, authoritative source of truth for error response shape across
+the entire API — including `07-security.md` §3, which must not restate or contradict this.**
+(A Codex-assisted review caught `07-security.md` §3 describing a stale, pre-decision version of
+this contract — fixed there to reference this section instead of re-describing it.)
+
+**Every** `4xx`/`5xx` response — including `422` validation errors — uses one consistent
+envelope, so the frontend only ever needs one error-parsing code path. The `fields` key is
+**always present** in the envelope, with no exceptions:
+- Non-validation errors (e.g. `404 CASE_NOT_FOUND`, `500` internal errors): `fields` is present
+  with value `null`.
+- `422` validation errors: `fields` is present with an array of `{field, issue}` objects.
+
+There is no third option and no "omit the key" case — this was previously left ambiguous
+("null, not present, or empty array — pick one") and is now fixed to exactly one shape so the
+frontend can rely on a single fixed TypeScript type (`fields: FieldError[] | null`) without a
+`"fields" in error` existence check.
+
 ```json
 {
   "error": {
     "code": "CASE_NOT_FOUND",
-    "message": "No case found with id CASE-99999"
+    "message": "No case found with id 99999",
+    "fields": null
   }
 }
 ```
-(FastAPI's default validation error shape for `422`s differs slightly — standard
-`{"detail": [...]}, ` — this will be normalized in the exception handler layer so the frontend
-only has to handle one shape. Documented here as a decision, not left implicit.)
+
+For `422` validation errors specifically, `fields` is populated with per-field detail (derived
+from Pydantic's default `{"detail": [...]}` output, **transformed** into this shape — the raw
+Pydantic output is never returned to the client as-is):
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request failed validation.",
+    "fields": [
+      { "field": "outcome", "issue": "must be one of: won, lost, fraud_confirmed" }
+    ]
+  }
+}
+```
+
+**Implementation note:** this requires a custom FastAPI exception handler for
+`RequestValidationError` that reshapes Pydantic's default output into the envelope above,
+registered once in `main.py` — FastAPI's built-in default (`{"detail": [...]}`) must never reach
+the client unmodified, for any endpoint, in any error case.
 
 ---
 
